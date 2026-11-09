@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#130F18">
+<title>Hermeson hits Studio</title>
+<meta name="description" content="Componha letras de música com IA e cole direto no Suno: forró, sertanejo, arrocha, gospel e mais.">
+<!-- App (PWA): manifest, ícones, configuração e peças do app. Mantenha estas linhas nas próximas versões. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hermeson hits">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="config.js"></script>
+<script src="app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+/* A cor de destaque vem do ritmo escolhido e muda suave quando troca de ritmo */
+@property --g0{syntax:"<color>";inherits:true;initial-value:#17121d}
+@property --g1{syntax:"<color>";inherits:true;initial-value:#4a3f5c}
+@property --g2{syntax:"<color>";inherits:true;initial-value:#e8e1f2}
+:root{
+  --g0:#17121d; --g1:#4a3f5c; --g2:#e8e1f2;
+  --bg:#130F18; --surface:#1C1722; --surface-2:#241E2C; --surface-3:#2F2838;
+  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.15);
+  --text:#F6F2F8; --muted:#ADA4B8; --faint:#7C7486; --ink:#140F18;
+  --ok:#5ED39B; --warn:#F3C251; --bad:#FF6B6B;
+  --font:"Archivo","Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --cond:68%;
+  --r-s:9px; --r-m:12px; --r-l:18px;
+  --ctl:40px; --tabh:54px; --gut:14px;
+  transition:--g0 .6s ease,--g1 .6s ease,--g2 .6s ease;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);color-scheme:dark;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;color:var(--text);font:400 14px/1.45 var(--font);-webkit-font-smoothing:antialiased;background:var(--bg)}
+.halo{position:fixed;left:0;right:0;top:0;height:min(70vh,520px);z-index:0;pointer-events:none;
+  background:radial-gradient(110% 80% at 92% -22%,color-mix(in srgb,var(--g1) 46%,transparent),transparent 66%),
+             radial-gradient(70% 50% at -12% -12%,color-mix(in srgb,var(--g2) 12%,transparent),transparent 70%)}
+main{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:4px var(--gut) calc(var(--tabh) + 28px + env(safe-area-inset-bottom))}
+body[data-view="compor"] main{padding-bottom:calc(var(--tabh) + 84px + env(safe-area-inset-bottom))}
+:focus-visible{outline:2px solid var(--g2);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+.sr{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+[hidden]{display:none!important}
+
+/* ---------- BARRA DO TOPO ---------- */
+.appbar{position:sticky;top:0;z-index:20;padding:calc(8px + env(safe-area-inset-top)) var(--gut) 8px;
+  background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  border-bottom:1px solid var(--line)}
+.appbar-in{max-width:560px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:8px;min-width:0}
+.mono{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;color:var(--ink);
+  background:linear-gradient(140deg,var(--g2),color-mix(in srgb,var(--g2) 50%,var(--g1)));
+  font:800 15px/1 var(--font);font-stretch:62%;letter-spacing:.03em}
+.brand-txt{min-width:0}
+.brand-txt b{display:block;font:800 18px/1 var(--font);font-stretch:var(--cond);letter-spacing:.01em;white-space:nowrap}
+.brand-txt small{display:block;margin-top:2px;font-size:11px;line-height:1.2;color:var(--muted)}
+.model-pill{display:inline-flex;align-items:center;gap:7px;flex:none;max-width:44%;height:30px;padding:0 10px;border-radius:999px;cursor:pointer;
+  font:600 12px var(--font);color:var(--muted);background:var(--surface);border:1px solid var(--line)}
+.model-pill span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.model-pill .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--warn)}
+.model-pill.ok{color:var(--text)}
+.model-pill.ok .dot{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 22%,transparent)}
+
+/* ---------- TELAS ---------- */
+.view{display:none}
+.view.on{display:block}
+.page-head{padding:14px 2px 10px}
+.page-head h1{margin:0;font:800 30px/.95 var(--font);font-stretch:var(--cond);letter-spacing:.005em}
+.page-head .lead{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+/* ---------- AVISO DE CONEXÃO ---------- */
+.onboard{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:10px 10px 10px 12px;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line-2)}
+.ob-ico{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;background:var(--surface-3);color:var(--g2)}
+.ob-ico svg{width:16px;height:16px}
+.ob-txt{flex:1;min-width:0}
+.ob-txt b{display:block;font-size:13.5px;font-weight:650}
+.ob-txt small{display:block;color:var(--muted);font-size:12px}
+
+/* ---------- CARTAZ DO RITMO ---------- */
+.poster{position:relative;overflow:hidden;isolation:isolate;margin:10px 0 18px;padding:14px 14px 13px;border-radius:var(--r-l);min-height:112px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  background:radial-gradient(85% 110% at 100% 0%,color-mix(in srgb,var(--g2) 60%,transparent),transparent 62%),
+             linear-gradient(165deg,var(--g1) 0%,var(--g0) 92%);
+  box-shadow:0 26px 50px -30px color-mix(in srgb,var(--g1) 85%,transparent),inset 0 0 0 1px rgba(255,255,255,.10)}
+.poster::after{content:"";position:absolute;inset:0;z-index:-1;opacity:.22;mix-blend-mode:overlay;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.poster-bpm{position:absolute;top:11px;right:11px;display:inline-flex;align-items:baseline;gap:3px;padding:4px 9px;border-radius:999px;
+  background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.16);font-size:11px;color:rgba(255,255,255,.85)}
+.poster-bpm b{font:800 15px/1 var(--font);font-stretch:var(--cond);color:#fff}
+.poster h1{margin:0 0 5px;max-width:78%;font:800 34px/.9 var(--font);font-stretch:62%;text-transform:uppercase;color:#fff;text-wrap:balance}
+.poster p{margin:0;max-width:85%;font-size:12.5px;line-height:1.35;color:rgba(255,255,255,.82)}
+
+/* ---------- CAMPOS ---------- */
+.fld{margin:0 0 18px}
+.fld-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 8px}
+.fld-h h2,.fld-h label{margin:0;font:650 14px/1.25 var(--font);color:var(--text)}
+.fld-h small{color:var(--faint);font-size:11.5px}
+input[type=text],input[type=password],select,textarea{width:100%;margin:0;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);
+  font:400 16px/1.4 var(--font);padding:10px 12px;transition:border-color .15s,box-shadow .15s}
+input[type=text],input[type=password],select{height:var(--ctl);padding-top:0;padding-bottom:0}
+textarea{min-height:88px;resize:vertical}
+select{appearance:none;-webkit-appearance:none;padding-right:38px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23ADA4B8' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:color-mix(in srgb,var(--g2) 70%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--g2) 18%,transparent)}
+.fl{display:block;margin:14px 0 6px;font:600 13px/1.2 var(--font);color:var(--text)}
+.card-head + .fl{margin-top:0}
+.row{display:flex;gap:8px;align-items:center}
+.row>input,.row>select{flex:1;min-width:0}
+.hint{margin:6px 0 0;color:var(--faint);font-size:11.5px;line-height:1.45}
+.status{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:1.2em}
+.status:empty{display:none}
+.status.err{color:var(--bad)} .status.ok{color:var(--ok)}
+.status.center{text-align:center}
+
+/* ---------- RITMOS ---------- */
+.ggrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.gtile{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:7px;min-height:66px;margin:0;padding:8px 8px 9px;
+  border-radius:var(--r-m);text-align:left;color:var(--text);background:var(--surface);border:1px solid var(--line);cursor:pointer;
+  font:inherit;transition:border-color .2s,background-color .2s,transform .12s}
+.gtile:active{transform:scale(.97)}
+.gsw{width:20px;height:20px;border-radius:6px;flex:none;
+  background:radial-gradient(120% 120% at 100% 0%,var(--c2),transparent 62%),linear-gradient(150deg,var(--c1),var(--c0));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.gbpm{position:absolute;top:9px;right:8px;font-size:10.5px;line-height:1;color:var(--faint);font-variant-numeric:tabular-nums}
+.gnm{font:650 12px/1.2 var(--font);overflow-wrap:anywhere}
+.gtile.on{border-color:var(--c2);background:linear-gradient(170deg,color-mix(in srgb,var(--c1) 40%,var(--surface)),var(--surface) 78%)}
+.gtile.on .gbpm{color:var(--c2)}
+
+/* ---------- VOZ, CLIMA E DURAÇÃO ---------- */
+.seg{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:3px;padding:3px;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line)}
+.seg label{display:flex;align-items:center;justify-content:center;height:32px;padding:0 6px;border-radius:9px;cursor:pointer;
+  font:600 13px/1 var(--font);color:var(--muted);transition:background-color .15s,color .15s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;cursor:pointer;
+  font:600 12.5px/1 var(--font);color:var(--muted);background:var(--surface);border:1px solid var(--line);transition:background-color .15s,color .15s,border-color .15s}
+.seg input:checked + label,.chips input:checked + label{color:var(--text);background:var(--surface-3);box-shadow:inset 0 0 0 1.5px var(--g2)}
+.chips input:checked + label{border-color:transparent}
+.seg input:focus-visible + label,.chips input:focus-visible + label{outline:2px solid var(--g2);outline-offset:2px}
+
+/* ---------- BOTÕES ---------- */
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:var(--ctl);min-width:var(--ctl);margin:0;padding:0 14px;border-radius:11px;
+  border:1px solid transparent;font:650 13px/1 var(--font);white-space:nowrap;text-decoration:none;flex:none;-webkit-user-select:none;user-select:none;
+  transition:transform .12s,background-color .15s,border-color .15s}
+.btn:active{transform:scale(.97)}
+.btn svg{width:15px;height:15px;flex:none}
+.btn-pri{color:var(--ink);background:var(--g2)}
+.btn-sec{color:var(--text);background:var(--surface-2);border-color:var(--line)}
+.btn-sm{height:30px;padding:0 11px;font-size:12px;border-radius:9px}
+.btn-sq{width:var(--ctl);padding:0}
+.btn-block{display:flex;width:100%}
+.btn.done{color:#0D2A1B;background:var(--ok);border-color:transparent}
+.btn-row{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.btn-row .btn{width:100%}
+.mt8{margin-top:8px}
+
+/* ---------- BOTÃO COMPOR + ABAS ---------- */
+.cta-wrap{position:fixed;left:0;right:0;bottom:calc(var(--tabh) + env(safe-area-inset-bottom));z-index:12;padding:10px var(--gut) 8px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,var(--bg) 58%);transition:transform .25s,opacity .25s}
+.cta{pointer-events:auto;display:flex;width:100%;max-width:560px;height:46px;margin:0 auto;border-radius:13px;
+  font:800 17px/1 var(--font);font-stretch:78%;letter-spacing:.01em;color:var(--ink);
+  background:linear-gradient(120deg,var(--g2),color-mix(in srgb,var(--g2) 58%,#fff));
+  box-shadow:0 14px 34px -14px color-mix(in srgb,var(--g2) 80%,transparent)}
+.cta svg{width:17px;height:17px}
+body:not([data-view="compor"]) .cta-wrap{opacity:0;transform:translateY(24px)}
+body:not([data-view="compor"]) .cta{pointer-events:none}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:13;height:calc(var(--tabh) + env(safe-area-inset-bottom));padding:0 8px env(safe-area-inset-bottom);
+  background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  border-top:1px solid var(--line);transition:transform .25s}
+.tabbar-in{max-width:480px;margin:0 auto;height:var(--tabh);display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;
+  color:var(--faint);font:600 10.5px/1 var(--font)}
+.tab svg{width:19px;height:19px}
+.tab.on{color:var(--text)}
+.tab.on svg{color:var(--g2)}
+.tab.on::before{content:"";position:absolute;top:-1px;width:26px;height:2px;border-radius:0 0 2px 2px;background:var(--g2)}
+body.typing .tabbar,body.typing .cta-wrap{transform:translateY(160%);opacity:0;pointer-events:none}
+
+/* ---------- CARTÕES ---------- */
+.card{position:relative;margin:0 0 12px;padding:13px;border-radius:var(--r-l);background:var(--surface);border:1px solid var(--line)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.card-head h3{margin:0;font:700 15px/1.2 var(--font)}
+.card-head .hint{margin:0}
+
+/* ---------- RESULTADO ---------- */
+.release{display:grid;grid-template-columns:84px 1fr;gap:12px;align-items:center;margin:12px 0 12px}
+.cover-thumb{display:block;width:100%;margin:0;padding:0;border:0;border-radius:11px;overflow:hidden;cursor:zoom-in;background:var(--surface);
+  box-shadow:0 18px 36px -18px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.08)}
+#capa{display:block;width:100%;height:auto;aspect-ratio:1/1}
+.release.big{grid-template-columns:1fr}
+.release.big .cover-thumb{cursor:zoom-out;border-radius:18px}
+.release-info{min-width:0}
+#outTitulo{margin:0;padding:0;border:0;background:none;white-space:pre-wrap;overflow-wrap:anywhere;font:800 25px/.98 var(--font);font-stretch:var(--cond);color:var(--text)}
+#outTitulo:focus{outline:none;color:var(--g2)}
+.artist{margin:4px 0 0;font:600 12.5px/1.2 var(--font);color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0 0}
+.chip{display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;color:var(--muted);
+  background:var(--surface-2);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.song-insp{margin:6px 0 0;font-size:11.5px;line-height:1.4;color:var(--ok)}
+.release + .btn-row{margin:0 0 10px}
+.qwarn{margin:0 0 12px;padding:8px 10px;border-radius:10px;font-size:12px;line-height:1.45;color:var(--warn);
+  background:color-mix(in srgb,var(--warn) 9%,transparent);border:1px solid color-mix(in srgb,var(--warn) 26%,transparent)}
+.qwarn:empty{display:none}
+pre{white-space:pre-wrap;overflow-wrap:break-word;margin:0}
+.card:has(#outLetra:focus){border-color:color-mix(in srgb,var(--g2) 55%,transparent)}
+#outLetra{font:400 14.5px/1.6 var(--font);color:#EFE9F3}
+#outLetra:focus,pre.mini:focus{outline:none}
+#outLetra .tag{display:inline-block;margin:8px 0 1px;padding:1px 7px;border-radius:6px;font:650 11px/1.5 var(--font);color:var(--g2);
+  background:color-mix(in srgb,var(--g2) 13%,transparent)}
+#outLetra .vin{font:800 18px/1.3 var(--font);font-stretch:var(--cond);color:var(--g2)}
+mark{background:color-mix(in srgb,var(--bad) 85%,transparent);color:#fff;border-radius:4px;padding:0 3px}
+.norima{text-decoration:underline wavy var(--warn);text-decoration-thickness:1.5px;text-underline-offset:5px}
+.suno-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.card-head + .suno-row{border-top:0;padding-top:2px}
+.sn{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;font:800 12px/1 var(--font);color:var(--ink);background:var(--g2)}
+.si{flex:1;min-width:0}
+.si b{display:block;font-size:13.5px;font-weight:650}
+.si small{display:block;color:var(--faint);font-size:11.5px;line-height:1.4}
+.si small i{font-style:normal;font-weight:600;color:var(--muted)}
+.si .over{color:var(--bad);font-weight:700}
+pre.mini{margin:2px 0 2px;max-height:86px;overflow:auto;padding:8px 10px;border-radius:10px;font:400 12px/1.45 var(--font);color:var(--muted);
+  background:var(--bg);border:1px solid var(--line)}
+pre.mini:focus{border-color:color-mix(in srgb,var(--g2) 55%,transparent)}
+
+/* ---------- VAZIO E HISTÓRICO ---------- */
+.empty{text-align:center;padding:40px 16px 20px}
+.empty-art{width:64px;height:64px;margin:0 auto 14px;border-radius:18px;display:grid;place-items:center;color:var(--g2);background:var(--surface);border:1px solid var(--line)}
+.empty-art svg{width:30px;height:30px}
+.empty h2{margin:0 0 6px;font:800 23px/1 var(--font);font-stretch:var(--cond)}
+.empty p{margin:0 auto 14px;max-width:260px;color:var(--muted);font-size:13px}
+.list{padding:4px 12px}
+.hist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.hist-item:last-child{border-bottom:0}
+.hcover{width:38px;height:38px;border-radius:9px;flex:none;display:grid;place-items:center;color:#fff;font:800 19px/1 var(--font);font-stretch:62%;
+  background:radial-gradient(90% 90% at 100% 0%,var(--c2) -30%,transparent 66%),linear-gradient(160deg,var(--c1),var(--c0));box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.hinfo{flex:1;min-width:0}
+.hinfo b{display:block;font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hinfo small{display:block;color:var(--faint);font-size:11.5px}
+.list .empty{padding:26px 10px}
+.hist-item .btn-sq{width:34px;height:34px;min-width:34px;color:var(--faint);background:transparent;border-color:transparent}
+
+/* ---------- AJUSTES ---------- */
+.tag-free{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:650;color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+details.card summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font:700 15px/1.2 var(--font)}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"";width:9px;height:9px;margin-right:4px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .2s}
+details.card[open] summary::after{transform:rotate(-135deg)}
+.about{margin:18px 0 6px;text-align:center;font-size:11.5px;color:var(--faint)}
+
+/* ---------- AVISO E CARREGANDO ---------- */
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;z-index:40;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);
+  padding:6px 12px 6px 6px;border-radius:999px;font:600 13px/1.3 var(--font);color:var(--text);background:var(--surface-3);border:1px solid var(--line-2);
+  box-shadow:0 16px 36px -14px rgba(0,0,0,.85);opacity:0;transform:translate(-50%,-12px);transition:opacity .2s,transform .2s;pointer-events:none}
+.toast i{width:21px;height:21px;border-radius:50%;flex:none;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px;color:#0D2A1B;background:var(--ok)}
+.toast.err i{background:var(--bad);color:#fff}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.loading{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 90%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.loading-box{width:min(320px,88vw);display:flex;flex-direction:column;align-items:center;text-align:center}
+.eq{display:flex;align-items:center;gap:4px;height:46px;margin:0 0 16px}
+.eq i{display:block;width:5px;height:100%;border-radius:3px;background:var(--g2);transform:scaleY(.2);animation:eq 1.1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:-.75s}.eq i:nth-child(3){animation-delay:-.3s}.eq i:nth-child(4){animation-delay:-.95s}
+.eq i:nth-child(5){animation-delay:-.5s}.eq i:nth-child(6){animation-delay:-.15s}.eq i:nth-child(7){animation-delay:-.6s}
+.eq i:nth-child(8){animation-delay:-.85s}.eq i:nth-child(9){animation-delay:-.4s}
+@keyframes eq{0%,100%{transform:scaleY(.18)}50%{transform:scaleY(1)}}
+.loading-box b{font:800 24px/1 var(--font);font-stretch:var(--cond)}
+.loading-box > span{min-height:2.6em;margin-top:6px;font-size:13px;color:var(--muted)}
+.fases{list-style:none;width:100%;margin:12px 0 0;padding:12px 14px;display:grid;gap:9px;text-align:left;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line)}
+.fases li{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--faint)}
+.fases li::before{content:"";width:16px;height:16px;flex:none;border-radius:50%;border:2px solid var(--surface-3);box-sizing:border-box}
+.fases li.on{color:var(--text)}
+.fases li.on::before{border-color:var(--g2);border-top-color:transparent;animation:spin .8s linear infinite}
+.fases li.done{color:var(--muted)}
+.fases li.done::before{content:"✓";display:grid;place-items:center;border:0;background:var(--g2);color:var(--ink);font-size:11px;font-weight:800}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  :root{transition:none}
+  .eq i,.fases li.on::before{animation:none}
+  .eq i{transform:scaleY(.6)}
+  .cta-wrap,.tabbar,.toast,.gtile{transition:none}
+}
+@media (min-width:560px){ .ggrid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+</style>
+</head>
+<body data-view="compor">
+<div class="halo" aria-hidden="true"></div>
+
+<header class="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <div class="mono" aria-hidden="true">HH</div>
+      <div class="brand-txt"><b>Hermeson hits</b><small>Studio de composição</small></div>
+    </div>
+    <button class="model-pill" id="modelPill" type="button" aria-label="Conexão com o Gemini"><span class="dot"></span><span id="modelPillTxt">Conectar</span></button>
+  </div>
+</header>
+
+<main>
+<!-- ===================== COMPOR ===================== -->
+<section class="view on" id="view-compor">
+  <div class="onboard" id="onboard" hidden>
+    <div class="ob-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8M17 6l3 3M14.5 8.5l2 2"/></svg></div>
+    <div class="ob-txt"><b>Conecte o Gemini para começar</b><small>Leva 1 minuto e é grátis.</small></div>
+    <button class="btn btn-pri btn-sm" id="btnOnboard" type="button">Conectar</button>
+  </div>
+
+  <section class="poster" aria-live="polite">
+    <span class="poster-bpm" id="bannerBpmBox" hidden><b id="bannerBpm"></b>bpm</span>
+    <h1 id="bannerNome">Escolha o ritmo</h1>
+    <p id="genreSel"></p>
+  </section>
+
+  <div class="fld">
+    <div class="fld-h"><h2>Ritmo</h2></div>
+    <div class="ggrid" id="genres" role="listbox" aria-label="Ritmos"></div>
+  </div>
+
+  <div class="fld">
+    <div class="fld-h"><label for="tema">Sobre o que é a música?</label><small class="tnum"><span id="cntTema">0</span>/1200</small></div>
+    <textarea id="tema" autocomplete="off" maxlength="1200" placeholder="Conte a cena: quem, onde, o que aconteceu e o que ele fez depois."></textarea>
+  </div>
+
+  <div class="fld"><div class="fld-h"><h2>Voz</h2></div><div class="seg" id="vozSeg" style="--cols:2"></div></div>
+  <div class="fld"><div class="fld-h"><h2>Clima</h2><small>Opcional</small></div><div class="chips" id="climaChips"></div></div>
+  <div class="fld"><div class="fld-h"><h2>Duração</h2><small>Sem escolher: 3 min</small></div><div class="seg" id="tamSeg" style="--cols:3"></div></div>
+  <div class="fld">
+    <div class="fld-h"><label for="vinheta">Nome falado no começo</label></div>
+    <input id="vinheta" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Ex: Hérmerson hitis">
+    <p class="hint">A voz fala esse nome uma vez, na abertura da música. Escreva do jeito que ela deve pronunciar.</p>
+  </div>
+
+  <div hidden aria-hidden="true">
+    <input id="inspirado" type="text" autocomplete="off">
+    <input id="titulo" type="text" autocomplete="off">
+    <input type="checkbox" id="revisao" checked>
+    <input type="checkbox" id="suspense" checked>
+    <input type="checkbox" id="grave" checked>
+    <input type="checkbox" id="solo" checked>
+    <input type="checkbox" id="semMetais" checked>
+    <div id="bpmBox">
+      <span id="bpmVal">140</span>
+      <input type="range" id="bpmRange" min="60" max="190" step="1" value="140">
+      <input type="checkbox" id="bpmAuto" checked>
+    </div>
+  </div>
+  <div class="status center" id="composeStatus"></div>
+</section>
+
+<!-- ===================== LETRA ===================== -->
+<section class="view" id="view-letra">
+  <div class="empty" id="letraVazia">
+    <div class="empty-art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 10v4M6 6v12M10 3v18M14 8v8M18 5v14M22 10v4"/></svg></div>
+    <h2>Nenhuma letra ainda</h2>
+    <p>Escolha o ritmo, conte a história e toque em Compor letra.</p>
+    <button class="btn btn-pri" id="btnIrCompor" type="button">Compor agora</button>
+  </div>
+
+  <div id="resultCard" hidden>
+    <div class="release" id="release">
+      <button class="cover-thumb" id="coverBtn" type="button" aria-label="Ampliar capa"><canvas id="capa" width="1080" height="1080"></canvas></button>
+      <div class="release-info">
+        <pre id="outTitulo" contenteditable="true" spellcheck="false"></pre>
+        <p class="artist">Hermeson hits</p>
+        <div class="meta" id="songMeta"></div>
+        <p class="song-insp" id="songInsp" hidden></p>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sec" id="btnBaixarCapa" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Baixar capa</button>
+      <button class="btn btn-sec" id="btnShareCapa" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/></svg>Enviar capa</button>
+    </div>
+    <p class="qwarn" id="qWarn"></p>
+
+    <section class="card">
+      <div class="card-head"><h3>Letra</h3><span class="hint">Toque para editar</span></div>
+      <pre id="outLetra" contenteditable="true" spellcheck="false"></pre>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>Enviar pro Suno</h3><a class="btn btn-sec btn-sm" href="https://suno.com/create" target="_blank" rel="noopener">Abrir o Suno</a></div>
+      <div class="suno-row"><span class="sn">1</span><div class="si"><b>Letra</b><small>Cole no campo <i>Lyrics</i></small><small class="tnum"><span id="cntLetra">0</span> de 5000 caracteres</small></div><button class="btn btn-sec" data-copy="outLetra" type="button">Copiar</button></div>
+      <div class="suno-row"><span class="sn">2</span><div class="si"><b>Estilo</b><small>Cole no campo <i>Styles</i></small><small class="tnum"><span id="cntEstilo">0</span> de 1000 caracteres</small></div><button class="btn btn-sec" data-copy="outEstilo" type="button">Copiar</button></div>
+      <pre id="outEstilo" class="mini" contenteditable="true" spellcheck="false"></pre>
+    </section>
+
+    <section class="card" hidden>
+      <div class="card-head"><h3>Ajustar</h3></div>
+      <div class="row">
+        <input id="ajuste" type="text" placeholder="Ex: refrão mais forte">
+        <button class="btn btn-pri" id="btnAjustar" type="button">Aplicar</button>
+      </div>
+      <div class="btn-row mt8">
+        <button class="btn btn-sec" id="btnHumano" type="button">Mais humana</button>
+        <button class="btn btn-sec" id="btnRefrao" type="button">Novo refrão</button>
+      </div>
+      <div class="status" id="resStatus"></div>
+    </section>
+  </div>
+</section>
+
+<!-- ===================== HISTÓRICO ===================== -->
+<section class="view" id="view-historico">
+  <header class="page-head">
+    <h1>Histórico</h1>
+    <p class="lead" id="histCount"></p>
+  </header>
+  <div class="card list" id="hist"></div>
+</section>
+
+<!-- ===================== AJUSTES ===================== -->
+<section class="view" id="view-ajustes">
+  <header class="page-head"><h1>Ajustes</h1></header>
+  <section class="card">
+    <div class="card-head"><h3>Conexão com o Gemini</h3><span class="tag-free">Grátis</span></div>
+    <label class="fl" for="apikey">Chave da API</label>
+    <div class="row">
+      <input id="apikey" type="password" placeholder="Cole aqui sua chave AIza…" autocomplete="off" spellcheck="false">
+      <button class="btn btn-sec btn-sq" id="toggleKey" type="button" aria-label="Mostrar chave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+    <a class="btn btn-sec btn-block mt8" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Pegar minha chave grátis</a>
+    <label class="fl" for="model">Modelo</label>
+    <select id="model">
+      <option value="gemini-3.8-flash">gemini-3.8-flash (recomendado)</option>
+      <option value="gemini-4-argon">gemini-4-argon (pago)</option>
+      <option value="gemini-flash-latest">gemini-flash-latest</option>
+      <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</option>
+    </select>
+    <button class="btn btn-sec btn-block mt8" id="loadModels" type="button">Buscar modelos da minha chave</button>
+    <p class="hint">O botão confere sua chave e escolhe o Flash mais novo, que é grátis. Se o Google estiver lotado, o app tenta de novo e troca de modelo sozinho. A chave fica só enquanto o app está aberto: cole de novo sempre que abrir o app.</p>
+    <div class="status" id="keyStatus"></div>
+  </section>
+  <details class="card">
+    <summary>Filtro anti-IA</summary>
+    <p class="hint" style="margin:12px 0 10px">Palavras que o compositor evita e o app confere. Uma por linha ou separadas por vírgula.</p>
+    <textarea id="proibidas" spellcheck="false"></textarea>
+    <button class="btn btn-sec btn-block mt8" id="resetProibidas" type="button">Restaurar lista padrão</button>
+  </details>
+  <p class="about">Hermeson hits Studio, versão 6.6</p>
+</section>
+</main>
+
+<div class="cta-wrap"><button class="btn cta" id="btnGerar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Compor letra</span></button></div>
+
+<nav class="tabbar" aria-label="Navegação">
+  <div class="tabbar-in">
+    <button class="tab on" data-view="compor" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <span>Compor</span>
+    </button>
+    <button class="tab" data-view="letra" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <span>Letra</span>
+    </button>
+    <button class="tab" data-view="historico" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Histórico</span>
+    </button>
+    <button class="tab" data-view="ajustes" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="loading" id="loading" hidden>
+  <div class="loading-box">
+    <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <b id="loadingTitle">Compondo sua letra</b>
+    <span id="loadingMsg">Afinando o violão…</span>
+    <ol class="fases">
+      <li id="f1">Composição</li>
+      <li id="f2">Revisão do produtor</li>
+      <li id="f3">Conferência de rima</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   ARMAZENAMENTO
+   ========================================================= */
+// Chave, nome falado, escolhas, história e histórico ficam só enquanto o app está aberto:
+// somem quando você fecha e abre o app de novo, mas não somem se o celular só recarregar a página.
+// Ficam guardados para sempre só o modelo e o filtro anti-IA.
+const SESSAO = /^lg_(f_|r_|sw_|genre$|bpm$|key$|vinheta$|hist$)/;
+const area = k => SESSAO.test(k) ? sessionStorage : localStorage;
+const store = {
+  get(k, d){ try{ const v = area(k).getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ area(k).setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const $ = id => document.getElementById(id);
+
+// Apaga o que as versões antigas deixaram guardado no celular (inclusive o histórico antigo)
+try{
+  Object.keys(localStorage).filter(k => SESSAO.test(k)).forEach(k => localStorage.removeItem(k));
+}catch(e){}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Nome falado no começo da música: vem do campo "Nome falado no começo" (fica salvo neste celular)
+const VINHETA_PADRAO = "Hérmerson hitis";
+const vinhetaAtual = () => (($("vinheta") && $("vinheta").value) || "").trim() || VINHETA_PADRAO;
+const normNome = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+// reconhece a linha da vinheta: o nome escolhido ou qualquer grafia de Hermeson/Hérmerson Hitis
+function ehVinheta(linha){
+  const l = normNome(linha), v = normNome(vinhetaAtual());
+  if(!l) return false;
+  if(/herme?r?so[nm] ?hit/.test(l)) return true;
+  return v.length >= 3 && (l === v || (v.length >= 8 && l.includes(v)));
+}
+
+// Texto de voz: vai dentro do Estilo, no final, sempre inteiro
+const VOZ_PADRAO = "Use my selected voice as the lead vocal. Preserve its natural identity, tone, accent, and pronunciation. Create a clean, professional studio-quality vocal that is clear, balanced, and natural. Keep the lead vocal completely dry and free of effects: no reverb, echo, delay, chorus, doubling, harmonies, distortion, or robotic processing. Avoid clipping, harsh sibilance, muddiness, background noise, pitch artifacts, and sudden changes in vocal tone. Keep the vocal consistent and intelligible throughout the song.";
+
+/* =========================================================
+   RITMOS
+   ========================================================= */
+const GENRES = {
+  forro: {
+    nome: "Forró romântico eletrônico", curto: "Forró romântico", desc: "Sofrência de banda, guitarra solo", bpm: 140, icone: "🎸",
+    cores: ["#1a0605","#b3261e","#ff9f43"],
+    exemplo: "Ele abre o jornal na padaria de manhã e descobre na coluna social que a ex vai casar em dezembro. Paga o café calado e sai arrasado.",
+    letra: `Forró romântico eletrônico de banda nordestina dos anos 2000 (Sergipe, Ceará, Pará).
+Linguagem: português falado do Nordeste, direto, emotivo, sem rebuscamento. Usa "tu/te/teu" misturado com "você" como no falar popular.
+Temas típicos: amor perdido, traição, saudade, ciúme, recaída, ligação de madrugada, carta, foto, bar, estrada.
+Estrutura: versos narrativos curtos que contam a cena, pré-refrão que sobe a tensão, refrão explosivo e fácil de cantar junto com um gancho que repete.
+Rima: rimas simples e sonoras no fim dos versos (AABB ou ABAB), vogais abertas no refrão para o cantor soltar a voz.`,
+    estilo: "forró romântico eletrônico de banda nordestina anos 2000, guitarra solo distorcida e chorosa na intro e entre as partes, teclado com órgão e cordas, baixo pulsante, bumbo em todos os tempos, triângulo no contratempo",
+  },
+  raiz: {
+    nome: "Sertanejo raiz", desc: "Viola caipira, dupla, causo", bpm: 92, icone: "🪕",
+    cores: ["#130e07","#6e4e22","#e9c47c"],
+    exemplo: "Um boiadeiro velho volta pra fazenda onde nasceu, encontra a porteira caída e a casa vazia, e lembra do pai tocando viola na varanda.",
+    letra: `Sertanejo raiz / música caipira (moda de viola, toada, cururu, pagode de viola).
+Linguagem: caipira do interior de SP, MG, GO e MT, com vocabulário da roça (porteira, curral, carro de boi, mangueira, paiol, berrante, cocho, tropa, estradão, rancho, lamparina, fogão de lenha). Pode usar formas como "ocê", "num", "pra mode" com moderação e de forma natural.
+Temas: vida no campo, saudade da terra, causos, boiadeiro, amor simples, a mãe, o pai, a natureza, a viola.
+Estrutura: estrofes narrativas que contam um causo com começo, meio e fim; refrão curto ou nenhum (moda de viola pode ser só estrofes). Métrica regular, versos de 7 sílabas (redondilha maior) de preferência.
+Rima: rima rica e bem marcada, tradicional, nos versos pares pelo menos.`,
+    estilo: "sertanejo raiz caipira, moda de viola, viola caipira de dez cordas ponteada em destaque, violão no ritmo de pagode de viola ou toada, acordeom suave, sem bateria pesada, gravação acústica quente",
+  },
+  anos90: {
+    nome: "Sertanejo romântico anos 90", curto: "Sertanejo anos 90", desc: "Balada de dupla, teclado e violão", bpm: 76, icone: "💔",
+    cores: ["#18050f","#8e1b4a","#ff9db5"],
+    exemplo: "Ela foi embora numa sexta à noite e deixou a chave em cima da mesa. Ele passa a madrugada olhando o telefone que não toca.",
+    letra: `Sertanejo romântico dos anos 90 (balada de dupla).
+Linguagem: romântica, popular, com frases de efeito simples e diretas, do jeito que se fala, sem palavras difíceis.
+Temas: amor impossível, separação, pedido de volta, paixão proibida, telefone que não toca, noite sem dormir, a outra pessoa.
+Estrutura clássica de balada: verso 1, verso 2 (ou pré-refrão), refrão grande e emocionado, verso, refrão, ponte curta com a frase mais forte, refrão final com subida de tom.
+Rima: perfeita e cantável, frases longas que se resolvem no fim, gancho no primeiro verso do refrão.`,
+    estilo: "sertanejo romântico anos 90, balada de dupla, violão de aço dedilhado, teclado com cordas e piano, bateria suave, baixo redondo, acordeom em respostas, solo de guitarra limpa, sobe o tom no último refrão",
+  },
+  vaquejada: {
+    nome: "Vaquejada", desc: "Aboio, gibão, parque, cavalo", bpm: 150, icone: "🐎",
+    cores: ["#1a0b04","#a3561b","#ffc56e"],
+    exemplo: "O vaqueiro ganha a faixa no parque e procura na arquibancada a morena que prometeu torcer por ele, mas ela já foi embora com outro.",
+    letra: `Forró de vaquejada / pisadinha de vaqueiro do sertão nordestino.
+Linguagem: do vaqueiro nordestino, com vocabulário da vaquejada (gibão, perneira, chapéu de couro, puxador, esteira, faixa, parque, boi, cavalo de raça, quarto de milha, aboio, "valeu boi", locutor do parque, poeira, mourão).
+Temas: orgulho de vaqueiro, a paixão pela vaquejada, a morena que ficou na arquibancada, o cavalo de estimação, saudade do sertão, festa no parque.
+Estrutura: pode abrir com um aboio curto (versos longos com vogais esticadas como "ê boi"), versos animados, refrão de festa fácil de gritar junto.
+Rima: rimas fortes e populares, frases de efeito que viram bordão.`,
+    estilo: "forró de vaquejada do sertão, aboio de vaqueiro na abertura, sanfona marcante, zabumba e triângulo, teclado de forró, baixo pulsante, bateria de forró animada, clima de festa de vaquejada",
+  },
+  baiao: {
+    nome: "Baião escrachado", desc: "Sanfona tradicional + humor rock 90", bpm: 128, icone: "🪗",
+    cores: ["#05131f","#1478a8","#ffd23f"],
+    exemplo: "Um matuto vai pra cidade grande pela primeira vez, se perde no metrô, compra um celular que não sabe usar e acaba mandando áudio de amor pra sogra.",
+    letra: `Mistura de baião tradicional nordestino (sanfona, zabumba, triângulo, temas do sertão, jeito de contar história do Rei do Baião) com o humor escrachado e debochado das bandas de rock cômico brasileiras dos anos 90.
+Linguagem: humor popular, trocadilhos, situações absurdas do dia a dia, personagens caricatos, gírias, exageros, sotaque nordestino forte, palavras engraçadas, mudança de clima repentina na música. Nada ofensivo a grupos de pessoas: o alvo do humor é o próprio narrador e as situações.
+Temas: confusão amorosa engraçada, viagem pra cidade grande que dá errado, sogra, festa que vira bagunça, tecnologia que o matuto não entende.
+Estrutura: versos narrativos de causo cômico, refrão chiclete e bobo de propósito, uma parte em que o ritmo muda de surpresa (vira rock pesado por alguns compassos e volta pro baião), final com piada.
+Rima: rimas engraçadas e inesperadas, trocadilhos no fim do verso.`,
+    estilo: "baião tradicional com sanfona de oito baixos, zabumba e triângulo, misturado com rock cômico brasileiro anos 90, guitarra distorcida que entra de surpresa e volta pro baião, vocal debochado com sotaque nordestino",
+  },
+  remix: {
+    nome: "DJ Remix", desc: "Paredão, batida eletrônica, refrão-chiclete", bpm: 130, icone: "🎧",
+    cores: ["#0b0620","#5b2be0","#22e1f5"],
+    exemplo: "Ele saiu da fossa, chamou os amigos pro paredão e decidiu que hoje não atende ligação da ex de jeito nenhum.",
+    letra: `Remix de DJ para paredão, festa e redes sociais (pode ser sobre base de forró, piseiro ou eletrônica brasileira).
+Linguagem: frases curtas e repetitivas, gírias atuais, bordões fáceis de virar trend, chamadas para dançar.
+Temas: festa, paquera, solteiro, superação de ex, curtição; ou versão de festa de uma história de sofrência.
+Estrutura: intro com chamada do DJ, verso curto, pré com subida (build-up), DROP com o gancho repetido muitas vezes, segundo verso curto, pré, drop final. Menos texto, mais repetição do gancho.
+Rima: rimas curtas e batidas, palavras de duas ou três sílabas no gancho.`,
+    estilo: "remix de DJ brasileiro pra paredão, batida eletrônica pesada, grave forte, synth bass, build-up com caixa acelerando, drop explosivo com o refrão repetido, forró e piseiro com eletrônica, mixagem potente",
+  },
+  gospelforro: {
+    nome: "Forró gospel romântico", curto: "Forró gospel", desc: "Forró gospel romântico · banda com letra de fé", bpm: 138, icone: "🙏",
+    cores: ["#170a03","#9a4413","#ffd98a"],
+    gospel: true,
+    exemplo: "Ele perdeu o emprego, a geladeira ficou vazia e a esposa chorava escondida na cozinha. Numa madrugada ele ajoelhou no chão da sala e pediu socorro a Deus. Na semana seguinte o telefone tocou com uma vaga.",
+    letra: `Forró gospel romântico: a mesma levada e o mesmo jeito apaixonado do forró de banda nordestina dos anos 2000, mas a letra é de fé cristã.
+Linguagem: português falado do Nordeste, simples e emotivo, como um testemunho contado na igreja ou numa conversa. Fala com Deus ou sobre Deus de forma próxima e carinhosa (Senhor, meu Deus, Jesus, Pai).
+Temas: testemunho de vitória, Deus que não abandona, volta pra casa do Pai, oração de madrugada, cura, provisão, a família restaurada, gratidão.
+O "romântico" aqui é o amor de Deus: a intensidade e a saudade do forró, mas dirigidas a Deus. Nunca romance entre homem e mulher.
+Estrutura: versos que contam a cena da luta, pré-refrão que sobe a fé, refrão forte de louvor fácil de cantar junto, com gancho que repete.
+Rima: rimas simples e sonoras no fim dos versos (AABB ou ABAB), vogais abertas no refrão.
+Respeito: nada de citar versículo inventado, nada de prometer riqueza, nada de julgar outras religiões.`,
+    estilo: "forró gospel romântico, louvor em ritmo de forró de banda nordestina anos 2000, guitarra solo melódica na intro e entre as partes, teclado com cordas e órgão, baixo pulsante, bumbo em todos os tempos, triângulo",
+  },
+  seresta: {
+    nome: "Seresta", desc: "Romance e saudade, serenata popular", bpm: 78, icone: "🌙",
+    cores: ["#0a1024","#3a56a0","#e6d3a8"],
+    exemplo: "Na saída do trabalho, ele passa em frente à casa onde os dois moravam e encontra a janela acesa, mas não tem coragem de bater.",
+    letra: `Seresta romântica brasileira, com clima noturno, sentimental e popular.
+Linguagem: português brasileiro simples, íntimo e cantável, sem palavras rebuscadas.
+Temas: saudade, amor perdido, serenata, lembranças, pedido de perdão e reencontro.
+Estrutura: versos narrativos e emocionados, refrão marcante que funciona como declaração ou pedido; melodia imaginada para ser cantada com sentimento.
+Rima: rimas naturais e sonoras, sem sacrificar o sentido da história.`,
+    estilo: "seresta romântica brasileira, violão de nylon dedilhado, teclado suave com cordas, guitarra limpa respondendo à voz, baixo macio, bateria leve, clima noturno e sentimental",
+  },
+  arrocha: {
+    nome: "Arrocha", desc: "Sofrência dançante e refrão forte", bpm: 105, icone: "💃",
+    cores: ["#1c0716","#a6246a","#ff8fbf"],
+    exemplo: "Ela vê o ex dançando com outra no bar, finge que não sentiu nada e pede mais uma música para provar que superou.",
+    letra: `Arrocha romântico brasileiro, sofrido e dançante.
+Linguagem: popular, direta e emocional, com frases curtas e naturais.
+Temas: término, traição, recaída, ciúme, saudade e tentativa de esquecer alguém.
+Estrutura: versos que contam uma cena concreta, pré-refrão crescente e refrão muito marcante, repetível e fácil de cantar.
+Rima: rimas simples e fortes, com gancho emocional no refrão; evite clichês vazios.`,
+    estilo: "arrocha romântico brasileiro, teclado marcante, batida lenta e dançante, baixo profundo, bateria eletrônica suave, guitarra limpa com frases chorosas, refrão forte de sofrência",
+  },
+  mpb: {
+    nome: "MPB", desc: "Canção brasileira, poética e orgânica", bpm: 92, icone: "🎼",
+    cores: ["#06160e","#2f7d57","#e3c770"],
+    exemplo: "Dois desconhecidos dividem o abrigo durante uma chuva e conversam como se já tivessem se encontrado antes.",
+    letra: `MPB contemporânea, canção brasileira autoral e musical.
+Linguagem: português brasileiro natural, imagens originais e poéticas, mas claras; evite frases genéricas ou rebuscamento gratuito.
+Temas: cotidiano, encontros, cidade, memória, afeto, escolhas e pequenas cenas da vida.
+Estrutura: versos com narrativa ou imagens que se desenvolvem, refrão com uma ideia central memorável e, se couber, uma ponte que amplie o sentido.
+Rima: livre ou discreta, sempre a serviço da musicalidade e do significado.`,
+    estilo: "MPB contemporânea, violão orgânico, piano ou Rhodes delicado, baixo acústico, percussão brasileira sutil, arranjo elegante e intimista, melodia original e sofisticada",
+  },
+  pagoderomantico: {
+    nome: "Pagode romântico", desc: "Romance, balanço e coro de refrão", bpm: 96, icone: "🥁",
+    cores: ["#1a0d0a","#8c4430","#f7b37a"],
+    exemplo: "Depois de uma discussão boba, ele encontra o bilhete que ela deixou na geladeira e percebe que ainda dá tempo de pedir desculpas.",
+    letra: `Pagode romântico brasileiro, com balanço leve e emoção.
+Linguagem: português brasileiro coloquial, carinhoso e direto, com jeito de conversa.
+Temas: declaração de amor, reconciliação, saudade, pedido de perdão, relacionamento e cotidiano a dois.
+Estrutura: versos narrativos, pré-refrão que prepara a emoção e refrão melódico, marcante e fácil de cantar junto.
+Rima: natural e cantável, sem forçar palavras; inclua um gancho simples e afetivo no refrão.`,
+    estilo: "pagode romântico brasileiro, cavaquinho brilhante, tantã, pandeiro e repique de mão, violão de sete cordas, baixo redondo, balanço leve, teclado discreto, refrão melódico",
+  },
+  gospel: {
+    nome: "Gospel", desc: "Louvor e adoração, piano e refrão de fé", bpm: 74, icone: "✝️",
+    cores: ["#06101f","#2459a6","#f5e6b0"],
+    gospel: true,
+    exemplo: "Uma mãe passa a noite no corredor do hospital esperando notícia do filho. Sem forças, ela fecha os olhos e entrega tudo nas mãos de Deus. De manhã o médico sai sorrindo.",
+    letra: `Gospel brasileiro de louvor e adoração.
+Linguagem: português simples e sincero, de quem ora de verdade. Fala direto com Deus (Senhor, Pai, Jesus) ou testemunha o que Ele fez. Sem palavras difíceis e sem frases de efeito vazias.
+Temas: fé no meio da luta, entrega, gratidão, testemunho, cura, perdão, a presença de Deus no dia a dia.
+Mostre a fé por cenas concretas (o banco da igreja, o joelho no chão do quarto, a conta em cima da mesa, o corredor do hospital), não só por palavras religiosas soltas.
+Estrutura: versos calmos que contam a cena, pré-refrão que cresce, refrão grande de adoração, ponte que repete uma declaração de fé, refrão final mais forte.
+Rima: perfeita e cantável, gancho no primeiro verso do refrão.
+Respeito: nada de citar versículo inventado, nada de prometer riqueza, nada de julgar outras religiões.`,
+    estilo: "gospel brasileiro de louvor e adoração, piano em destaque, violão dedilhado, cordas e pad suave, bateria que cresce aos poucos, baixo redondo, guitarra limpa com delay suave, refrão de adoração grande",
+  }
+};
+
+const CLIMAS = [
+  ["auto","Automático"],["sofrência / dor de cotovelo","Sofrência"],["saudade","Saudade"],["traição","Traição"],
+  ["apaixonado / declaração","Apaixonado"],["superação / bola pra frente","Superação"],["festa / alegria","Festa"],["humor / zoeira","Humor"]
+];
+const VOZES = [["masculino","Homem"],["feminino","Mulher"]];
+const TAMANHOS = [["curta","2 min"],["padrao","3 min"],["longa","4 min"]];
+
+/* =========================================================
+   FILTRO ANTI-IA E NOMES BLOQUEADOS NO SUNO
+   ========================================================= */
+const PROIBIDAS_PADRAO = [
+  "tapeçaria","sinfonia","melodia da alma","ecoa","ecoando","ecoar","sussurro","sussurros","sussurra",
+  "essência","jornada","labirinto","infinito","infinita","eternidade","eterno amor","cosmos","constelação",
+  "galáxia","neon","vibrante","resiliência","resiliente","florescer","floresce","odisseia","efêmero","etéreo",
+  "sublime","enigma","néctar","abismo","horizonte infinito","mar de emoções","chama que arde","dança das estrelas",
+  "em meio a","em cada batida","tecido do tempo","sinfonia do amor","alma inquieta","ressoa","ressoar",
+  "mosaico","caleidoscópio","crepúsculo","aurora","plenitude","serenidade","melancolia","nostalgia",
+  "imensidão","utopia","paradoxo","silêncio ensurdecedor","coração em chamas","brisa suave"
+];
+const NOMES_BLOQUEADOS = ["calcinha preta","luiz gonzaga","gonzagão","mamonas","mamonas assassinas","tião carreiro","pardinho","zezé di camargo","chitãozinho","xororó","leandro e leonardo","bruno e marrone","wesley safadão","safadão","aviões do forró","solange almeida","desejo de menina","garota safada","limão com mel","mastruz com leite","dominguinhos","jackson do pandeiro","tonico e tinoco","milionário e josé rico","joão paulo e daniel","alok","palavra cantada","barões da pisadinha","tarcísio do acordeon","marlus viana","solidão demais","os corcéis"];
+const PROIBIDAS_EN = ["tapestry","symphony","echoes","echoing","whispers","whispering","journey","eternity","neon","vibrant","ethereal","celestial","cosmic","galaxy","constellation","resilience","embrace the","soul on fire","dance with the stars","in the depths","shattered dreams","kaleidoscope","labyrinth","odyssey","enigma","serenity","melancholy","ignite","ablaze","testament","realm","boundless","infinite"];
+const linguaDe = gk => (GENRES[gk] && GENRES[gk].lingua) || "pt";
+function getProibidas(gk){
+  if(linguaDe(gk) === "en") return PROIBIDAS_EN;
+  return $("proibidas").value.split(/[\n,]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+}
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+let genreKey = store.get("lg_genre", null); if(!GENRES[genreKey]) genreKey = null; // abre sem nada marcado
+let ultimo = null;
+let viewAtual = "compor";
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+const TEMA_NEUTRO = ["#17121d","#4a3f5c","#e8e1f2"];
+function aplicarTema(gk){
+  const c = GENRES[gk] ? GENRES[gk].cores : TEMA_NEUTRO, r = document.documentElement.style;
+  r.setProperty("--g0", c[0]); r.setProperty("--g1", c[1]); r.setProperty("--g2", c[2]);
+}
+function irPara(v){
+  viewAtual = v;
+  document.body.dataset.view = v;
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "view-" + v));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.view === v));
+  aplicarTema(v === "letra" && ultimo && !$("resultCard").hidden ? ultimo.genero : genreKey);
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => irPara(t.dataset.view)));
+$("btnIrCompor").onclick = () => irPara("compor");
+
+// esconde abas e botão quando o teclado está aberto
+const EDITAVEL = "input[type=text],input[type=password],textarea,[contenteditable]";
+// Só esconde quando o teclado está aberto de verdade (a tela encolhe).
+// Antes ficava escondido se o teclado fechava pelo botão voltar com o campo ainda selecionado.
+let alturaCheia = Math.max(window.innerHeight, window.visualViewport ? window.visualViewport.height : 0);
+function checarTeclado(){
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  if(h > alturaCheia) alturaCheia = h;
+  const a = document.activeElement;
+  const editando = !!(a && a.matches && a.matches(EDITAVEL));
+  const tecladoAberto = h < alturaCheia - 150;
+  document.body.classList.toggle("typing", editando && tecladoAberto);
+}
+if(window.visualViewport) window.visualViewport.addEventListener("resize", checarTeclado);
+window.addEventListener("resize", checarTeclado);
+window.addEventListener("orientationchange", () => setTimeout(() => {
+  alturaCheia = window.visualViewport ? window.visualViewport.height : window.innerHeight; checarTeclado();
+}, 400));
+document.addEventListener("focusin", () => setTimeout(checarTeclado, 350));
+document.addEventListener("focusout", () => setTimeout(checarTeclado, 80));
+
+/* =========================================================
+   SAUDAÇÃO
+   ========================================================= */
+
+
+/* =========================================================
+   RITMOS (CARTÕES)
+   ========================================================= */
+function renderGenres(){
+  const box = $("genres"); box.innerHTML = "";
+  Object.entries(GENRES).forEach(([k, g]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "gtile" + (k === genreKey ? " on" : "");
+    b.setAttribute("role", "option"); b.setAttribute("aria-selected", k === genreKey);
+    b.setAttribute("aria-label", `${g.nome}, ${g.bpm} bpm`);
+    b.style.setProperty("--c0", g.cores[0]); b.style.setProperty("--c1", g.cores[1]); b.style.setProperty("--c2", g.cores[2]);
+    b.innerHTML = `<span class="gsw" aria-hidden="true"></span><span class="gbpm" aria-hidden="true">${g.bpm}</span><span class="gnm">${esc(g.curto || g.nome)}</span>`;
+    b.onclick = () => { genreKey = k; store.set("lg_genre", k); renderGenres(); atualizarBpm(); };
+    box.appendChild(b);
+  });
+  const g = GENRES[genreKey];
+  $("bannerNome").textContent = g ? (g.curto || g.nome) : "Escolha o ritmo";
+  $("genreSel").textContent = g ? g.desc : "Toque em um dos ritmos abaixo para começar.";
+  $("bannerBpmBox").hidden = !g;
+  if(g) $("bannerBpm").textContent = g.bpm;
+  if(viewAtual !== "letra") aplicarTema(genreKey);
+}
+
+/* =========================================================
+   CHIPS / SEGMENTOS
+   ========================================================= */
+function renderRadios(boxId, name, opts, def){
+  const saved = store.get("lg_r_" + name, def);
+  const box = $(boxId); box.innerHTML = "";
+  opts.forEach(([v, l, sub]) => {
+    const id = "r_" + name + "_" + v.replace(/\W+/g, "_");
+    const inp = document.createElement("input");
+    inp.type = "radio"; inp.name = name; inp.value = v; inp.id = id; inp.className = "sr";
+    if(v === saved) inp.checked = true;
+    inp.addEventListener("change", () => store.set("lg_r_" + name, v));
+    const lab = document.createElement("label");
+    lab.htmlFor = id; lab.innerHTML = esc(l) + (sub ? `<small>${esc(sub)}</small>` : "");
+    box.append(inp, lab);
+  });
+}
+const radio = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ""; };
+
+/* =========================================================
+   CHAVES LIGA/DESLIGA E BPM
+   ========================================================= */
+["revisao","suspense","grave","solo","semMetais","bpmAuto"].forEach(id => {
+  const v = store.get("lg_sw_" + id, null);
+  if(v !== null) $(id).checked = !!v;
+  $(id).addEventListener("change", () => store.set("lg_sw_" + id, $(id).checked));
+});
+function pintarBpm(){
+  const r = $("bpmRange");
+  $("bpmVal").textContent = r.value;
+  r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min) * 100) + "%");
+  $("bpmBox").classList.toggle("auto", $("bpmAuto").checked);
+}
+function atualizarBpm(){
+  const r = $("bpmRange");
+  const base = GENRES[genreKey] ? GENRES[genreKey].bpm : 140;
+  r.value = $("bpmAuto").checked ? base : store.get("lg_bpm", base);
+  pintarBpm();
+}
+$("bpmRange").addEventListener("input", () => {
+  if($("bpmAuto").checked){ $("bpmAuto").checked = false; store.set("lg_sw_bpmAuto", false); }
+  store.set("lg_bpm", parseInt($("bpmRange").value, 10));
+  pintarBpm();
+});
+$("bpmAuto").addEventListener("change", atualizarBpm);
+const bpmAtual = () => $("bpmAuto").checked ? (GENRES[genreKey] ? GENRES[genreKey].bpm : 140) : parseInt($("bpmRange").value, 10);
+
+/* =========================================================
+   CAMPOS DE TEXTO
+   ========================================================= */
+["tema","inspirado","titulo"].forEach(id => {
+  const v = store.get("lg_f_" + id, null); if(v !== null) $(id).value = v;
+  $(id).addEventListener("input", e => store.set("lg_f_" + id, e.target.value));
+});
+const contarTema = () => { $("cntTema").textContent = $("tema").value.length; };
+$("tema").addEventListener("input", contarTema);
+$("vinheta").value = store.get("lg_vinheta", "");
+$("vinheta").addEventListener("input", () => store.set("lg_vinheta", $("vinheta").value));
+/* =========================================================
+   CONEXÃO GEMINI
+   ========================================================= */
+function ensureModelOption(id){
+  const sel = $("model");
+  if(![...sel.options].some(o => o.value === id)){
+    const o = document.createElement("option"); o.value = id; o.textContent = id; sel.appendChild(o);
+  }
+}
+const temChave = () => !!$("apikey").value.trim();
+function atualizarConexao(){
+  const ok = temChave();
+  $("onboard").hidden = ok;
+  $("modelPill").classList.toggle("ok", ok);
+  $("modelPillTxt").textContent = ok ? $("model").value.replace(/^gemini-/, "") : "Conectar";
+}
+$("apikey").value = store.get("lg_key", "");
+$("apikey").addEventListener("input", () => { store.set("lg_key", $("apikey").value.trim()); atualizarConexao(); });
+$("toggleKey").onclick = () => { const i = $("apikey"); i.type = i.type === "password" ? "text" : "password"; };
+const savedModel = store.get("lg_model", "gemini-3.8-flash");
+ensureModelOption(savedModel); $("model").value = savedModel;
+$("model").addEventListener("change", e => { store.set("lg_model", e.target.value); atualizarConexao(); });
+$("modelPill").onclick = () => irPara("ajustes");
+$("btnOnboard").onclick = () => { irPara("ajustes"); setTimeout(() => $("apikey").focus(), 250); };
+
+$("proibidas").value = store.get("lg_proibidas", PROIBIDAS_PADRAO).join(", ");
+$("proibidas").addEventListener("change", () => store.set("lg_proibidas", getProibidas()));
+$("resetProibidas").onclick = () => {
+  $("proibidas").value = PROIBIDAS_PADRAO.join(", "); store.set("lg_proibidas", PROIBIDAS_PADRAO); toast("Lista restaurada");
+};
+
+/* =========================================================
+   AVISOS, CÓPIA E CARREGAMENTO
+   ========================================================= */
+let toastT = null;
+function toast(msg, tipo){
+  const t = $("toast");
+  t.className = "toast" + (tipo === "err" ? " err" : "");
+  t.innerHTML = `<i>${tipo === "err" ? "!" : "✓"}</i><span>${esc(msg || "Copiado!")}</span>`;
+  void t.offsetWidth; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), tipo === "err" ? 6500 : 1700);
+}
+$("toast").addEventListener("click", () => $("toast").classList.remove("show"));
+
+async function copiar(txt, btn){
+  let ok = false;
+  try{ await navigator.clipboard.writeText(txt); ok = true; }
+  catch(e){
+    const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    ta.remove();
+  }
+  if(!ok){ toast("Não consegui copiar. Segure o texto e copie manualmente.", "err"); return; }
+  toast("Copiado!");
+  if(btn){
+    const o = btn.textContent; btn.classList.add("done"); btn.textContent = "✓ Copiado";
+    setTimeout(() => { btn.classList.remove("done"); btn.textContent = o; }, 1600);
+  }
+}
+document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copiar($(b.dataset.copy).innerText.trim(), b)));
+
+function setStatus(el, msg, cls){
+  el.textContent = msg || ""; el.className = "status" + (el.id === "composeStatus" ? " center" : "") + (cls ? " " + cls : "");
+  if(!$("loading").hidden && msg && !cls) $("loadingMsg").textContent = msg.replace(/^[⏳🎧✓]\s*/u, "");
+}
+const FRASES_LOAD = ["Afinando o violão…","Procurando a rima certa…","Escrevendo o refrão…","Contando a história verso por verso…","Tirando as palavras de máquina…","Conferindo se tudo faz sentido…"];
+let loadTimer = null;
+function carregando(on, titulo){
+  const l = $("loading");
+  if(on){
+    $("loadingTitle").textContent = titulo || "Compondo sua letra";
+    l.hidden = false; let i = 0; $("loadingMsg").textContent = FRASES_LOAD[0];
+    clearInterval(loadTimer);
+    loadTimer = setInterval(() => { i = (i + 1) % FRASES_LOAD.length; $("loadingMsg").textContent = FRASES_LOAD[i]; }, 3400);
+  }else{ l.hidden = true; clearInterval(loadTimer); }
+}
+function fase(n){ [1,2,3].forEach(i => { $("f" + i).className = i < n ? "done" : (i === n ? "on" : ""); }); }
+
+/* =========================================================
+   GEMINI
+   ========================================================= */
+const API = "https://generativelanguage.googleapis.com/v1beta";
+
+// Modelos que falharam há pouco vão pro fim da fila, pra não esperar por eles de novo.
+const pausa = {};
+// gemini-flash-latest aponta pro mesmo 3.8 Flash, por isso fica por último.
+// gemini-2.5-flash saiu: o Google só libera pra quem já usava.
+const RESERVAS_PADRAO = ["gemini-3.6-flash","gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-flash-latest"];
+
+async function chamarGemini(systemText, userText){
+  const key = $("apikey").value.trim();
+  if(!key) throw new Error("Conecte sua chave do Gemini em Ajustes.");
+  if(navigator.onLine === false) throw new Error("Sem internet. Confira sua conexão e tente de novo.");
+  const model = $("model").value;
+  // Sem temperature/topP: o Google pede para não mandar mais nos modelos 3.6 em diante.
+  const body = {
+    systemInstruction: { parts: [{ text: systemText }] },
+    contents: [{ role: "user", parts: [{ text: userText }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: { titulo: { type: "STRING" }, letra: { type: "STRING" }, notas: { type: "STRING" } },
+        required: ["titulo","letra","notas"]
+      }
+    }
+  };
+  // modelo escolhido primeiro, depois reservas grátis
+  const reservas = store.get("lg_reservas", null) || RESERVAS_PADRAO;
+  const base = [model, ...reservas.filter(m => m !== model && !/argon|pro/i.test(m))];
+  const agora = Date.now();
+  const fila = [...base.filter(m => !(pausa[m] > agora)), ...base.filter(m => pausa[m] > agora)];
+  const avisar = msg => setStatus(viewAtual === "letra" ? $("resStatus") : $("composeStatus"), msg);
+  const MOTIVO = { cota: "sem limite grátis agora", inexistente: "não existe mais", permissao: "não liberado pra sua chave", pedido: "recusou o pedido", lotado: "lotado" };
+
+  let data = null, usado = null;
+  const erros = [];
+  fora: for(const m of fila){
+    for(let tentativa = 1; tentativa <= 2; tentativa++){
+      let r;
+      try{
+        r = await fetch(`${API}/models/${encodeURIComponent(m)}:generateContent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+          body: JSON.stringify(body)
+        });
+      }catch(e){
+        // sem conexão não adianta trocar de modelo: avisa logo
+        if(tentativa === 2 || navigator.onLine === false) throw new Error("Sem internet ou a conexão caiu. Confira e tente de novo.");
+        await sleep(1500);
+        continue;
+      }
+      const d = await r.json().catch(() => ({}));
+      if(r.ok){ data = d; usado = m; delete pausa[m]; break fora; }
+      const msg = d?.error?.message || ("Erro " + r.status);
+      const st = d?.error?.status || "";
+      if(r.status === 401 || /API key not valid|API_KEY_INVALID|API key expired/i.test(msg)) throw new Error("Chave da API inválida. Confira em Ajustes se copiou inteira.");
+      const tipo = (r.status === 429 || /quota|RESOURCE_EXHAUSTED/i.test(msg + " " + st)) ? "cota"
+        : r.status === 404 ? "inexistente"
+        : r.status === 403 ? "permissao"
+        : r.status === 400 ? "pedido"
+        : "lotado";
+      if(tipo === "lotado" && tentativa === 1){
+        avisar(`⏳ Servidor do Google lotado no ${m}. Tentando de novo…`);
+        await sleep(4000);
+        continue;
+      }
+      erros.push({ tipo, msg });
+      pausa[m] = Date.now() + (tipo === "lotado" || tipo === "cota" ? 2 : 30) * 60000;
+      avisar(`⏳ ${m}: ${MOTIVO[tipo]}. Trocando de modelo…`);
+      break;
+    }
+  }
+  if(!data){
+    const tem = t => erros.some(e => e.tipo === t);
+    if(erros.length && erros.every(e => e.tipo === "permissao")) throw new Error("Sua chave não tem permissão para usar o Gemini. Gere uma chave nova no AI Studio e cole em Ajustes.");
+    if(tem("pedido") && !tem("lotado") && !tem("cota")) throw new Error("O Google recusou o pedido: " + erros.find(e => e.tipo === "pedido").msg);
+    if(tem("cota") && !tem("lotado")) throw new Error("Limite grátis atingido em todos os modelos. O limite por minuto volta em 1 minuto; o do dia zera de madrugada.");
+    throw new Error("Os servidores do Google estão lotados agora em todos os modelos grátis. Espere 1 ou 2 minutos e tente de novo.");
+  }
+  if(usado !== model) avisar(`✓ Usei o ${usado} porque o ${model} não respondeu.`);
+  const cand = data?.candidates?.[0];
+  if(!cand) throw new Error("O Gemini não devolveu resposta" + (data?.promptFeedback?.blockReason ? " (bloqueado: " + data.promptFeedback.blockReason + ")" : "") + ". Tente reformular a história.");
+  const txt = (cand.content?.parts || []).filter(p => !p.thought && p.text).map(p => p.text).join("");
+  if(!txt.trim()){
+    const motivo = cand.finishReason || "";
+    if(/RECITATION/i.test(motivo)) throw new Error("O Google barrou a resposta por ficar parecida com uma música que já existe. Mude um pouco a história e tente de novo.");
+    if(/SAFETY|PROHIBITED|BLOCKLIST|SPII/i.test(motivo)) throw new Error("O filtro do Google barrou a resposta. Mude um pouco a história e tente de novo.");
+    throw new Error("O Gemini devolveu uma resposta vazia" + (motivo ? " (" + motivo + ")" : "") + ". Tente de novo.");
+  }
+  try{ return JSON.parse(txt); }
+  catch(e){
+    const m = txt.match(/\{[\s\S]*\}/);
+    if(!m) throw new Error("Resposta fora do formato. Tente de novo.");
+    return JSON.parse(m[0]);
+  }
+}
+
+$("loadModels").onclick = async () => {
+  const key = $("apikey").value.trim();
+  const st = $("keyStatus");
+  if(!key){ setStatus(st, "Cole a chave primeiro.", "err"); return; }
+  store.set("lg_key", key);
+  setStatus(st, "Buscando modelos…");
+  try{
+    let all = [], token = "";
+    do{
+      const r = await fetch(`${API}/models?pageSize=200${token ? "&pageToken=" + token : ""}`, { headers: { "x-goog-api-key": key } });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d?.error?.message || "Erro " + r.status);
+      all = all.concat(d.models || []); token = d.nextPageToken || "";
+    }while(token);
+    const txtModels = all.filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map(m => m.name.replace(/^models\//, ""))
+      .filter(id => /^gemini/i.test(id) && !/(image|tts|live|transcribe|embedding|robotics|banana|omni|audio|vision)/i.test(id));
+    if(!txtModels.length) throw new Error("Nenhum modelo de texto liberado para essa chave.");
+    const score = id => {
+      const v = id.match(/gemini-(\d+(?:\.\d+)?)/); let s = v ? parseFloat(v[1]) * 100 : 0;
+      if(/flash/i.test(id) && !/lite/i.test(id)) s += 1000; // Flash mais novo primeiro (tem plano grátis)
+      if(/pro|argon/i.test(id)) s -= 5;
+      if(/lite/i.test(id)) s -= 8;
+      if(/preview|exp/i.test(id)) s -= 1;
+      if(/latest/i.test(id)) s -= 50;
+      return s;
+    };
+    txtModels.sort((a, b) => score(b) - score(a));
+    const sel = $("model"); sel.innerHTML = "";
+    txtModels.forEach((id, i) => {
+      const o = document.createElement("option"); o.value = id;
+      o.textContent = id + (i === 0 ? " (recomendado)" : (/argon|pro/i.test(id) ? " (pago)" : ""));
+      sel.appendChild(o);
+    });
+    sel.value = txtModels[0]; store.set("lg_model", txtModels[0]);
+    store.set("lg_reservas", txtModels.filter(id => !/argon|pro|preview|exp/i.test(id)).slice(0, 6));
+    atualizarConexao();
+    setStatus(st, `✓ Chave funcionando. ${txtModels.length} modelos encontrados. Escolhido: ${txtModels[0]}`, "ok");
+  }catch(e){ setStatus(st, "✗ " + e.message, "err"); }
+};
+
+/* =========================================================
+   PEDIDOS AO COMPOSITOR E AO PRODUTOR
+   ========================================================= */
+function sistema(gk){
+  return `Você é um compositor brasileiro profissional com 30 anos de carreira, autor de sucessos gravados por bandas e duplas de todo o país. Você escreve como gente de verdade fala e canta. Você NÃO é uma inteligência artificial escrevendo poesia: você é um compositor popular escrevendo para o povo cantar junto.
+
+REGRAS DE OURO DA LETRA HUMANA:
+1. Escreva em português do Brasil popular e falado, com o sotaque e o vocabulário do ritmo pedido. Nada de linguagem de livro, de poema erudito ou de redação escolar.
+2. Conte uma cena concreta. Use objetos, lugares, horários, nomes e ações reais (o copo no balcão, a mensagem visualizada, a foto no porta-retrato, a rodoviária às seis). Mostre a emoção pela ação, não explicando o sentimento com palavras abstratas.
+3. Proibido usar metáforas grandiosas, cósmicas ou filosóficas. Proibido o vocabulário típico de IA. Nunca use estas palavras ou expressões: ${getProibidas(gk).join(", ")}.
+4. Cada verso tem que caber na boca do cantor: frases curtas, métrica parecida entre versos da mesma parte, sílabas tônicas caindo nos tempos fortes. Leia em voz alta mentalmente antes de escrever.
+5. O refrão tem um gancho (frase-título) curto, forte e memorável, que se repete. O título da música sai do gancho.
+6. RIMA É OBRIGATÓRIA. Todo verso cantado rima com pelo menos outro verso da mesma seção, pelo som da última palavra (dia/padaria, bem/ninguém, ali/aqui, mim/fim, chorar/voltar, saudade/verdade). Use esquema AABB ou ABAB nos versos e rima marcada no refrão. A rima tem que ser natural: nunca force uma palavra estranha ou sem sentido só para rimar; se não achar rima boa, reescreva o verso inteiro.
+
+COERÊNCIA (O MAIS IMPORTANTE):
+- A letra conta UMA história só, em ordem: o que aconteceu, o que ele sentiu, o que ele fez. Cada verso continua o anterior. Não pule de assunto, de lugar ou de tempo sem motivo.
+- Cada frase tem que fazer sentido sozinha e ser algo que uma pessoa diria de verdade numa conversa. Se soar estranho falado em voz alta, está errado.
+- Proibido: frases sem sentido, palavras jogadas só pelo som, imagens malucas ("meu peito é estrada de vidro", "o café chorou teu nome"), palavras inventadas, misturar tempos verbais, erro de concordância.
+- Exemplo RUIM (não faça): "Meu peito virou estrada de vidro na manhã / O café chorou teu nome em vão".
+- Exemplo BOM (faça assim): "Teu copo ainda tá do lado da pia / Do jeito que você deixou naquele dia".
+- Antes de responder, releia verso por verso e pergunte: isso faz sentido? Uma pessoa falaria assim? Rima com algum verso da mesma parte? Se a resposta for não, reescreva.
+7. Escreva cada palavra com a ortografia correta e completa (ex: "fui ler", "saí dali"), para o cantor virtual pronunciar certo. Pode usar "pra", "tá", "tô", "cê" quando for natural do ritmo. Sem reticências, sem emojis, sem aspas, sem parênteses dentro dos versos.
+8. A letra é 100% original e inédita. Nunca copie nem adapte versos de músicas existentes.
+9. Nada de lição de moral no final, nada de "e assim aprendi que...". Termine com imagem ou com o gancho.
+
+FORMATO PARA O SUNO:
+- Use apenas marcadores de seção em inglês entre colchetes, cada um sozinho na linha: [Intro], [Spoken], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Guitar Solo], [Instrumental Break], [Drop], [Build-Up], [Final Chorus], [Outro], [End].
+- Nunca coloque instruções, indicações de arranjo ou comentários dentro das seções ou no meio dos versos. Só a letra que será cantada.
+- Escreva todos os versos por extenso, inclusive os refrãos repetidos. Não escreva "repete o refrão".
+- Deixe uma linha vazia entre as seções.
+
+Responda só em JSON com os campos: titulo (só o nome da música), letra (a letra completa no formato acima) e notas (2 a 4 frases curtas em português explicando o esquema de rima, o gancho e o andamento sugerido).`;
+}
+
+function sistemaRevisor(gk){
+  return `Você é um produtor musical e revisor de letras brasileiro, exigente, que trabalha com compositores profissionais. Sua função é deixar a letra pronta para gravar, mudando só o que for preciso.
+
+Revise a letra VERSO POR VERSO e corrija:
+1. SENTIDO: qualquer frase sem sentido, estranha, confusa, com imagem maluca ou que ninguém falaria de verdade. Reescreva com palavras simples e concretas, do jeito que o povo fala.
+2. RIMA: todo verso cantado precisa rimar com pelo menos outro verso da mesma seção, pelo som da última palavra (esquema AABB ou ABAB). Corrija todos os versos sem rima. A rima tem que ser natural; nunca use palavra sem sentido para rimar.
+3. HISTÓRIA: a letra conta uma história só, em ordem lógica. Se um verso sair do assunto, troque.
+4. PORTUGUÊS: ortografia correta e completa, concordância verbal e nominal, tempo verbal coerente. Sem reticências, aspas, parênteses ou emojis.
+5. CARA DE IA: troque palavras rebuscadas, poéticas demais ou abstratas por palavras do dia a dia. Nunca use: ${getProibidas(gk).join(", ")}.${linguaDe(gk) === "en" ? "\n\nIMPORTANTE: esta letra é em INGLÊS. Revise em inglês (gramática, rima e naturalidade do inglês falado). Não traduza para português. Só a vinheta [Spoken] fica como está." : ""}
+6. CANTO: versos curtos, métrica parecida entre versos da mesma parte.
+
+Mantenha: os marcadores de seção exatamente como estão, a ordem das seções, a seção [Spoken] com a vinheta, o título, o gancho do refrão e a história. Os refrãos repetidos devem ficar iguais entre si.
+
+Responda só em JSON com os campos: titulo, letra (completa e revisada) e notas (2 a 4 frases curtas dizendo o esquema de rima e o que você corrigiu).`;
+}
+
+function estruturaPorTamanho(gk){
+  const t = radio("tamanho");
+  if(gk === "remix"){
+    return t === "curta" ? "[Intro] [Verse 1] [Build-Up] [Drop] [Outro] [End]"
+         : "[Intro] [Verse 1] [Build-Up] [Drop] [Verse 2] [Build-Up] [Drop] [Outro] [End]";
+  }
+  if(gk === "raiz"){
+    return t === "curta" ? "[Intro] [Verse 1] [Verse 2] [Chorus] [Outro] [End]"
+         : t === "longa" ? "[Intro] [Verse 1] [Verse 2] [Chorus] [Instrumental Break] [Verse 3] [Verse 4] [Chorus] [Outro] [End]"
+         : "[Intro] [Verse 1] [Verse 2] [Chorus] [Instrumental Break] [Verse 3] [Chorus] [Outro] [End]";
+  }
+  const solo = (gk === "forro" || gk === "gospelforro") ? "[Guitar Solo]" : "[Instrumental Break]";
+  if(t === "curta") return "[Intro] [Verse 1] [Pre-Chorus] [Chorus] [Outro] [End]";
+  if(t === "longa") return `[Intro] [Verse 1] [Pre-Chorus] [Chorus] ${solo} [Verse 2] [Pre-Chorus] [Chorus] [Bridge] [Final Chorus] [Outro] [End]`;
+  return `[Intro] [Verse 1] [Pre-Chorus] [Chorus] ${solo} [Verse 2] [Pre-Chorus] [Final Chorus] [Outro] [End]`;
+}
+
+function pedidoUsuario(gk, base){
+  const g = GENRES[gk];
+  const tema = base ? (base.tema || "") : $("tema").value.trim();
+  const insp = base ? (base.inspirado || "") : $("inspirado").value.trim();
+  if(!tema && !insp && !base) throw new Error("Escreva primeiro sobre o que é a música.");
+  const detalhes = base ? (base.detalhes || "") : "";
+  const titulo = base ? "" : $("titulo").value.trim();
+  const clima = base ? (base.clima || "auto") : (radio("clima") || "auto");
+  const voz = base ? (base.voz || "masculino") : (radio("voz") || "masculino");
+  let p = `RITMO: ${g.nome}\n${g.letra}\n\n`;
+  if(g.lingua === "en") p += `IDIOMA DA LETRA: INGLÊS americano simples e falado. A história abaixo está em português: use a ideia, mas escreva TODA a letra cantada em inglês. Todas as regras de letra humana, coerência e rima valem, trocando "português do Brasil" por inglês falado. Só a vinheta [Spoken] continua exatamente como pedido. O título também em inglês. As notas ficam em português.\n\n`;
+  if(tema) p += `HISTÓRIA: ${tema}\n`;
+  if(detalhes) p += `DETALHES QUE PRECISAM APARECER NA LETRA: ${detalhes}\n`;
+  if(insp) p += `INSPIRAÇÃO: ${insp}\nUse essa referência só para pegar o tema geral, o clima, a emoção, o tipo de refrão e a levada. A letra tem que ser 100% nova e sua: outra história, outra cena, outros personagens, outro título e outro gancho. Proibido copiar, adaptar ou parafrasear qualquer verso, frase, rima, gancho ou título da música de referência. Não cite o nome da música nem do artista na letra. Se não conhecer a música, use só a descrição como ideia de clima.${tema ? "" : " Crie você mesmo uma história concreta e nova que combine com esse clima."}\n`;
+  if(titulo) p += `TÍTULO OBRIGATÓRIO: ${titulo} (o gancho do refrão deve conter esse título)\n`;
+  p += `CLIMA: ${clima === "auto" ? "o mais típico do ritmo para essa história" : clima}\n`;
+  if(g.gospel) p += `QUEM CANTA: ${voz === "masculino" ? "um homem, eu-lírico masculino" : "uma mulher, eu-lírico feminino"}, falando com Deus ou testemunhando o que Deus fez. Música cristã: sem romance, sem bebida, sem palavrão.\n`;
+  else p += `QUEM CANTA: ${voz === "masculino" ? "um homem, eu-lírico masculino, falando com/sobre uma mulher" : "uma mulher, eu-lírico feminino, falando com/sobre um homem"}\n`;
+  p += `ESTRUTURA (use exatamente estes marcadores, nesta ordem): ${estruturaPorTamanho(gk)}\n`;
+  p += `A letra SEMPRE começa assim: [Intro], depois a seção [Spoken] com a vinheta falada, apenas esta linha, exatamente assim: ${vinhetaAtual()}\nNão repita essa vinheta em nenhum outro lugar da letra.\n`;
+  p += `Seções instrumentais ([Intro], [Guitar Solo], [Instrumental Break], [Outro], [End]) ficam vazias, só com o marcador. O final da música é só instrumental: nada de vinheta, nome ou fala depois do último refrão.\n`;
+  p += `Antes de responder, revise a letra inteira: troque qualquer verso que pareça escrito por máquina, confira a métrica e a ortografia.`;
+  return p;
+}
+
+function montarEstilo(gk){
+  const g = GENRES[gk];
+  const vozM = (radio("voz") || "masculino") === "masculino";
+  // a parte de voz (limpa, sem efeito, sem afinação robótica) agora vem do texto de voz no fim
+  const fixas = [
+    `${bpmAtual()} bpm`,
+    ($("suspense").checked ? "intro de suspense, depois " : "abre com ") + `locutor de voz grave falando ${vinhetaAtual()} uma vez só`,
+    `voz ${vozM ? "masculina" : "feminina"}, ${linguaDe(gk) === "en" ? "inglês americano" : "português do Brasil"}`,
+  ];
+  if($("solo").checked) fixas.push("voz solo, sem coro");
+  if($("grave").checked) fixas.push("tonalidade grave");
+  if($("semMetais").checked) fixas.push("sem saxofone, sem metais");
+  fixas.push("final instrumental sem vinheta", "gravado em estúdio, sem plateia");
+  const tirarNomes = t => { NOMES_BLOQUEADOS.forEach(n => { t = t.replace(new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "").replace(/,\s*,/g, ","); }); return t; };
+  const resto = tirarNomes(fixas.join(", "));
+  // o texto de voz entra inteiro no fim; se faltar espaço no limite de 1000 do Suno, quem encolhe é a descrição do ritmo
+  let ritmo = tirarNomes(g.estilo);
+  const cabe = 1000 - VOZ_PADRAO.length - resto.length - 4;
+  if(ritmo.length > cabe) ritmo = ritmo.slice(0, cabe).replace(/,[^,]*$/, "");
+  return `${ritmo}, ${resto}. ${VOZ_PADRAO}`;
+}
+/* =========================================================
+   CONFERÊNCIAS: ANTI-IA, FORMATO E RIMA
+   ========================================================= */
+function conferir(letra, gk){
+  const lower = letra.toLowerCase();
+  const achadas = getProibidas(gk).filter(w => {
+    const re = new RegExp("(^|[^a-zà-ú])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^a-zà-ú]|$)", "i");
+    return re.test(lower);
+  });
+  const problemas = [];
+  if(/\.\.\.|…/.test(letra)) problemas.push("reticências");
+  if(/\([^)]*\)/.test(letra)) problemas.push("parênteses nos versos");
+  const linhas = letra.split("\n").filter(l => l.trim() && !/^\[.*\]$/.test(l.trim()));
+  const longas = linhas.filter(l => l.trim().split(/\s+/).length > 14).length;
+  if(longas) problemas.push(longas + " verso(s) muito longo(s)");
+  return { achadas, problemas, versos: linhas.length };
+}
+
+function chaveRima(verso){
+  const palavras = verso.toLowerCase().replace(/[^a-zà-úç\s-]/g, " ").trim().split(/\s+/).filter(Boolean);
+  if(!palavras.length) return null;
+  let w = palavras[palavras.length - 1].replace(/-/g, "");
+  if(!w) return null;
+  w = w.replace(/qu(?=[eiéêí])/g, "k").replace(/gu(?=[eiéêí])/g, "g"); // aqui = aki, liguei = ligei
+  // 1) acha a sílaba tônica ANTES de simplificar a escrita (senão "voltou" vira "volto" e "falei" vira "fale")
+  let chave;
+  const acento = w.search(/[áéíóúâêô]/);
+  const nasal = w.match(/(ão|ãe|õe|ã)s?$/);
+  if(acento >= 0) chave = w.slice(acento);
+  else if(nasal) chave = nasal[0];
+  else{
+    // ditongo (pai, sei, vou, meu, saiu) conta como uma vogal só;
+    // i/u antes de nh, de m/n + consoante ou de r/l/z no fim é hiato (rainha, ainda, ruim, sair, juiz)
+    const nuc = [];
+    for(let i = 0; i < w.length; i++){
+      if(!/[aeiouãõ]/.test(w[i])) continue;
+      const prox = w[i + 1] || "", depois = w.slice(i + 2);
+      const ditongo = /[iu]/.test(prox) && prox !== w[i] && !/^([iu]|nh|[mn](?![aeiou])|[rlz]$|[rl](?![aeiou]))/.test(depois);
+      nuc.push(i);
+      if(ditongo) i++;
+    }
+    if(!nuc.length) return null;
+    const paroxitona = nuc.length > 1 && /([aeo]s?|em|ens|am)$/.test(w);
+    chave = w.slice(nuc[paroxitona ? nuc.length - 2 : nuc.length - 1]);
+  }
+  // 2) escreve a rima como se fala: beijo/desejo, papel/céu, voz/nós, acontece/esse
+  const c = chave
+    .replace(/ão/g, "aum").replace(/ãe/g, "aim").replace(/õe/g, "oim").replace(/ã/g, "an").replace(/õ/g, "on")
+    .replace(/ç/g, "s").normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/ss/g, "s").replace(/c(?=[ei])/g, "s")
+    .replace(/z$/, "s").replace(/s$/, "")
+    .replace(/ei(?=[^aeiou])/g, "e").replace(/ou(?=[^aeiou])/g, "o")
+    .replace(/l$/, "u");
+  if(!c) return null;
+  // "solta": rima do jeito que se canta (você/esquecer, amor/acabou, mar/está)
+  return { consoante: c, toante: c.replace(/[^aeiou]/g, ""), solta: c.replace(/r$/, "").replace(/ou$/, "o") };
+}
+function rimam(a, b){
+  if(!a || !b) return false;
+  if(a.consoante === b.consoante || a.solta === b.solta) return true;
+  return a.toante === b.toante && (a.toante.length >= 2 || a.consoante.slice(-1) === b.consoante.slice(-1));
+}
+function versosSemRima(letra, gk){
+  if(linguaDe(gk) !== "pt") return new Set(); // conferência de rima só funciona em português
+  const linhas = letra.split("\n");
+  const semRima = new Set();
+  let secao = [], nomeSecao = "";
+  const fechar = () => {
+    if(!/spoken|intro|outro|end|solo|instrumental|drop|build/i.test(nomeSecao) && secao.length >= 2){
+      secao.forEach(a => { if(!secao.some(b => b !== a && rimam(a.k, b.k))) semRima.add(a.i); });
+    }
+    secao = [];
+  };
+  linhas.forEach((l, i) => {
+    const t = l.trim();
+    if(/^\[.*\]$/.test(t)){ fechar(); nomeSecao = t; return; }
+    if(t) secao.push({ i, k: chaveRima(t) });
+  });
+  fechar();
+  return semRima;
+}
+
+function comVinheta(l){
+  const linhas = l.replace(/\r/g, "").split("\n");
+  let i = 0;
+  // pula o começo: linhas vazias, [Intro], a vinheta e tudo que a IA escreveu dentro do [Spoken] inicial
+  // (o nome falado é sempre o do campo "Nome falado no começo")
+  while(i < linhas.length){
+    const t = linhas[i].trim();
+    if(!t || ehVinheta(t)){ i++; continue; }
+    if(/^\[(intro|spoken|vinheta)[^\]]*\]$/i.test(t)){
+      i++;
+      if(/spoken|vinheta/i.test(t)) while(i < linhas.length && !/^\[.*\]$/.test(linhas[i].trim())) i++;
+      continue;
+    }
+    break;
+  }
+  const sobra = linhas.slice(i).filter(s => !ehVinheta(s));
+  // tira [Intro]/[Spoken] que sobrou vazio (acontecia quando a IA escrevia algo dentro do [Intro])
+  const resto = sobra.filter((s, j) => {
+    if(!/^\[(intro|spoken|vinheta)[^\]]*\]$/i.test(s.trim())) return true;
+    const prox = sobra.slice(j + 1).find(x => x.trim());
+    return !!prox && !/^\[.*\]$/.test(prox.trim());
+  }).join("\n").trim();
+  return `[Intro]\n\n[Spoken]\n${vinhetaAtual()}\n\n${resto}`;
+}
+function limparLetra(l){
+  return comVinheta(l).replace(/…|\.\.\./g, "").replace(/[“”"]/g, "")
+    .replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function destacar(letra, palavras, semRima){
+  return letra.split("\n").map((linha, i) => {
+    let h = esc(linha);
+    palavras.forEach(w => {
+      const re = new RegExp("(^|[^a-zà-úA-ZÀ-Ú])(" + esc(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")(?=[^a-zà-úA-ZÀ-Ú]|$)", "gi");
+      h = h.replace(re, "$1<mark>$2</mark>");
+    });
+    if(/^\s*\[.*\]\s*$/.test(linha)) return `<span class="tag">${h.trim()}</span>`;
+    if(ehVinheta(linha)) return `<span class="vin">${h}</span>`;
+    return (semRima && semRima.has(i)) ? `<span class="norima">${h}</span>` : h;
+  }).join("\n");
+}
+
+/* =========================================================
+   CAPA PARA O INSTAGRAM (1080 × 1080)
+   ========================================================= */
+function hexA(hex, a){ const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+async function fontesProntas(){
+  if(!document.fonts || !document.fonts.load) return;
+  try{
+    await Promise.race([
+      Promise.all([document.fonts.load('800 120px "Archivo"'), document.fonts.load('600 30px "Archivo"')]),
+      sleep(2500)
+    ]);
+  }catch(e){}
+}
+function quebrarLinhas(ctx, texto, max){
+  const out = []; let l = "";
+  texto.split(/\s+/).filter(Boolean).forEach(w => {
+    const t = l ? l + " " + w : w;
+    if(ctx.measureText(t).width > max && l){ out.push(l); l = w; } else l = t;
+  });
+  if(l) out.push(l);
+  return out;
+}
+// número fixo a partir do título: a mesma música sempre gera a mesma onda
+function semente(txt){ let h = 2166136261; for(let i = 0; i < txt.length; i++){ h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function sorteio(seed){
+  return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+let capaSeq = 0;
+async function desenharCapa(res){
+  const seq = ++capaSeq;
+  await fontesProntas();
+  if(seq !== capaSeq) return;
+  const cv = $("capa"), ctx = cv.getContext("2d"), S = 1080, M = 76;
+  const g = GENRES[res.genero] || GENRES.forro;
+  const [c0, c1, c2] = g.cores;
+  const titulo = (res.titulo || "Sem título").trim().toUpperCase();
+  const fonte = (peso, px, largura) => {
+    ctx.font = `${peso} ${px}px Archivo, "Roboto Condensed", "Arial Narrow", sans-serif`;
+    if("fontStretch" in ctx) ctx.fontStretch = largura || "normal";
+  };
+  const ls = px => { if("letterSpacing" in ctx) ctx.letterSpacing = px + "px"; };
+  ctx.clearRect(0, 0, S, S); ls(0); ctx.shadowColor = "transparent"; ctx.textBaseline = "alphabetic";
+
+  // fundo na cor do ritmo
+  let gr = ctx.createLinearGradient(0, 0, S * .35, S);
+  gr.addColorStop(0, c1); gr.addColorStop(1, c0);
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, S, S);
+  gr = ctx.createRadialGradient(S * .92, S * .04, 0, S * .92, S * .04, S * .82);
+  gr.addColorStop(0, hexA(c2, .62)); gr.addColorStop(1, hexA(c2, 0));
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, S, S);
+  gr = ctx.createLinearGradient(0, S * .48, 0, S);
+  gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(0,0,0,.62)");
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, S, S);
+  // grão de impressão
+  const img = ctx.getImageData(0, 0, S, S), d = img.data;
+  for(let i = 0; i < d.length; i += 4){ const n = (Math.random() - .5) * 14; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+
+  // topo: artista e ano
+  ctx.textAlign = "left"; ctx.fillStyle = "#ffffff";
+  fonte(800, 48, "extra-condensed"); ls(1);
+  ctx.fillText("HERMESON HITS", M, M + 42);
+  ctx.textAlign = "right"; ctx.fillStyle = "rgba(255,255,255,.72)";
+  fonte(600, 24, "normal"); ls(4);
+  ctx.fillText(`SINGLE ${new Date(res.quando || Date.now()).getFullYear()}`, S - M, M + 36);
+  ls(0);
+
+  // título: o maior que couber em até 3 linhas
+  const max = S - M * 2;
+  let fs = 214, linhas = [];
+  for(; fs >= 84; fs -= 6){
+    fonte(800, fs, "extra-condensed");
+    linhas = quebrarLinhas(ctx, titulo, max);
+    if(linhas.length <= 3 && linhas.every(l => ctx.measureText(l).width <= max)) break;
+  }
+  fs = Math.max(fs, 84);
+  fonte(800, fs, "extra-condensed");
+  if(linhas.length > 3){
+    linhas = linhas.slice(0, 3);
+    let ult = linhas[2];
+    while(ult && ctx.measureText(ult + "…").width > max) ult = / /.test(ult) ? ult.replace(/\s+\S+$/, "") : ult.slice(0, -1);
+    linhas[2] = ult + "…";
+  }
+  const larg = Math.max(...linhas.map(l => ctx.measureText(l).width));
+  if(larg > max){ fs = Math.floor(fs * max / larg); fonte(800, fs, "extra-condensed"); }
+  const lh = fs * .9, base = S - M - 66;
+  const topoTitulo = base - (linhas.length - 1) * lh - fs * .76;
+
+  // onda sonora: cada música tem a sua (as alturas saem do título)
+  const rnd = sorteio(semente(titulo + "|" + g.nome));
+  const cima = M + 112, baixo = topoTitulo - 58;
+  const hMax = Math.max(90, baixo - cima), meio = cima + Math.max(90, baixo - cima) / 2;
+  const N = 46, passo = max / N, bw = Math.max(6, passo * .5);
+  for(let i = 0; i < N; i++){
+    const t = i / (N - 1);
+    const env = .16 + .84 * Math.pow(Math.sin(Math.PI * t), 1.15);
+    const h = Math.max(bw, hMax * env * (.3 + .7 * rnd()));
+    const x = M + i * passo + (passo - bw) / 2;
+    ctx.fillStyle = hexA(c2, .45 + .55 * env);
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x, meio - h / 2, bw, h, bw / 2); else ctx.rect(x, meio - h / 2, bw, h);
+    ctx.fill();
+  }
+
+  // título
+  ctx.textAlign = "left"; ctx.fillStyle = "#ffffff";
+  fonte(800, fs, "extra-condensed");
+  linhas.forEach((l, i) => ctx.fillText(l, M, base - (linhas.length - 1 - i) * lh));
+
+  // rodapé: ritmo e andamento
+  fonte(650, 26, "normal"); ls(2);
+  ctx.fillStyle = c2; ctx.textAlign = "left";
+  ctx.fillText(g.nome.toUpperCase(), M, S - M);
+  ctx.fillStyle = "rgba(255,255,255,.82)"; ctx.textAlign = "right";
+  ctx.fillText(`${res.bpm || g.bpm} BPM`, S - M, S - M);
+  ls(0);
+}
+function nomeArquivo(){
+  const t = (ultimo?.titulo || "capa").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "capa";
+  return t + "-hermeson-hits.png";
+}
+const capaBlob = () => new Promise(r => $("capa").toBlob(r, "image/png"));
+function ampliarCapa(){
+  const big = $("release").classList.toggle("big");
+  $("coverBtn").setAttribute("aria-label", big ? "Diminuir capa" : "Ampliar capa");
+}
+$("coverBtn").onclick = ampliarCapa;
+$("btnBaixarCapa").onclick = async () => {
+  const b = await capaBlob(); if(!b) return;
+  const u = URL.createObjectURL(b); const a = document.createElement("a");
+  a.href = u; a.download = nomeArquivo(); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 4000);
+  toast("Capa salva!");
+};
+try{
+  if(navigator.canShare && navigator.canShare({ files: [new File([new Blob(["x"], { type: "image/png" })], "t.png", { type: "image/png" })] })) $("btnShareCapa").hidden = false;
+}catch(e){}
+$("btnShareCapa").onclick = async () => {
+  try{
+    const b = await capaBlob();
+    await navigator.share({ files: [new File([b], nomeArquivo(), { type: "image/png" })], title: ultimo?.titulo || "Hermeson hits" });
+  }catch(e){ if(e && e.name !== "AbortError") toast("Não deu pra compartilhar. Use Baixar capa.", "err"); }
+};
+
+/* =========================================================
+   MOSTRAR RESULTADO
+   ========================================================= */
+function contadores(){
+  const set = (id, n, lim) => { const el = $(id); el.textContent = n; el.classList.toggle("over", n > lim); };
+  set("cntLetra", $("outLetra").innerText.trim().length, 5000);
+  set("cntEstilo", $("outEstilo").innerText.trim().length, 1000);
+}
+["outLetra","outEstilo"].forEach(id => $(id).addEventListener("input", contadores));
+// Enter no título confirma em vez de quebrar a linha
+$("outTitulo").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); $("outTitulo").blur(); } });
+$("outTitulo").addEventListener("blur", () => {
+  if(!ultimo) return;
+  const t = $("outTitulo").innerText.trim();
+  if(t && t !== ultimo.titulo){ ultimo.titulo = t; desenharCapa(ultimo); salvarEdicao(); }
+});
+const campoRes = { outLetra: "letra", outEstilo: "estilo" };
+Object.keys(campoRes).forEach(id => $(id).addEventListener("blur", () => {
+  if(!ultimo) return;
+  const v = $(id).innerText.trim();
+  if(v && v !== ultimo[campoRes[id]]){ ultimo[campoRes[id]] = v; salvarEdicao(); }
+}));
+function salvarEdicao(){
+  const h = store.get("lg_hist", []);
+  const i = h.findIndex(r => r.quando === ultimo.quando);
+  if(i >= 0){ h[i] = ultimo; store.set("lg_hist", h); renderHist(); }
+}
+
+function mostrar(res, ir){
+  ultimo = res;
+  $("letraVazia").hidden = true; $("resultCard").hidden = false;
+  const g = GENRES[res.genero] || GENRES.forro;
+  const c = conferir(res.letra, res.genero);
+  const sr = versosSemRima(res.letra, res.genero);
+  $("outTitulo").textContent = res.titulo;
+  $("songMeta").innerHTML = [g.curto || g.nome, `${res.bpm || g.bpm} bpm`, `${c.versos} versos`].map(t => `<span class="chip">${esc(t)}</span>`).join("");
+  $("outLetra").innerHTML = destacar(res.letra, c.achadas, sr);
+  $("outEstilo").textContent = res.estilo;
+  $("songInsp").hidden = !res.inspirado;
+  $("songInsp").textContent = res.inspirado ? `✓ Letra original inspirada em ${res.inspirado}, sem trechos copiados` : "";
+  contadores();
+  const avisos = [];
+  if(sr.size) avisos.push(`${sr.size} verso(s) sem rima (sublinhados)`);
+  if(c.achadas.length) avisos.push("Palavras de IA em vermelho: " + c.achadas.join(", "));
+  if(c.problemas.length) avisos.push(c.problemas.join(", "));
+  $("qWarn").textContent = avisos.length ? "⚠ " + avisos.join(" · ") : "";
+  $("release").classList.remove("big");
+  desenharCapa(res);
+  if(ir) irPara("letra");
+}
+
+/* =========================================================
+   COMPOR / AJUSTAR
+   ========================================================= */
+async function gerar(extra, baseLetra){
+  const ajuste = !!baseLetra;
+  const st = ajuste ? $("resStatus") : $("composeStatus");
+  if(!temChave()){
+    toast("Conecte sua chave do Gemini primeiro.", "err");
+    irPara("ajustes"); setTimeout(() => $("apikey").focus(), 250);
+    return;
+  }
+  if(!ajuste && !genreKey){
+    toast("Escolha o ritmo da música.", "err");
+    $("genres").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  if(!ajuste && !$("tema").value.trim() && !$("inspirado").value.trim()){
+    toast("Escreva primeiro sobre o que é a música.", "err");
+    $("tema").scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => $("tema").focus(), 300);
+    return;
+  }
+  if(!ajuste && !radio("voz")){
+    toast("Escolha a voz: Homem ou Mulher.", "err");
+    $("vozSeg").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  if(!ajuste && !$("vinheta").value.trim()){
+    toast("Escreva o nome falado no começo.", "err");
+    $("vinheta").scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => $("vinheta").focus(), 300);
+    return;
+  }
+  const btns = ["btnGerar","btnAjustar","btnHumano","btnRefrao"].map($);
+  btns.forEach(b => b.disabled = true);
+  $("toast").classList.remove("show");
+  setStatus($("composeStatus"), ""); setStatus($("resStatus"), "");
+  carregando(true, ajuste ? "Ajustando sua letra" : "Compondo sua letra"); fase(1);
+  try{
+    const gk = ajuste && ultimo ? ultimo.genero : genreKey;
+    const base = ajuste ? (ultimo || {}) : null;
+    const inspAtual = base ? (base.inspirado || "") : $("inspirado").value.trim();
+    let user = pedidoUsuario(gk, base);
+    if(ajuste){
+      if(base.titulo) user += `\nTÍTULO ATUAL: ${base.titulo}`;
+      user += `\n\nLETRA ATUAL:\n${baseLetra}\n\nPEDIDO DE MUDANÇA: ${extra}\nMantenha tudo o que não foi pedido para mudar. Devolva a letra completa já com a mudança.`;
+    }
+    const obj = await chamarGemini(sistema(gk), user);
+    if(!obj || typeof obj.letra !== "string" || obj.letra.trim().length < 40) throw new Error("O Gemini devolveu uma letra vazia. Tente de novo.");
+    let letra = limparLetra(obj.letra);
+    let revisada = ajuste ? !!(ultimo && ultimo.revisada) : false;
+    let semRevisao = "";
+
+    // revisão do produtor: sentido, rima, palavras de IA e português (até 2 rodadas)
+    for(let rodada = 1; rodada <= 2; rodada++){
+      const c = conferir(letra, gk), sr = versosSemRima(letra, gk);
+      const temProblema = sr.size > 0 || c.achadas.length > 0;
+      const revisarSempre = ($("revisao").checked || !!inspAtual) && !ajuste && rodada === 1;
+      if(!revisarSempre && !temProblema) break;
+      fase(2); setStatus(st, `🎧 Produtor revisando a letra (rodada ${rodada})…`);
+      const linhas = letra.split("\n");
+      const listaSemRima = [...sr].map(i => "- " + linhas[i].trim()).join("\n");
+      let fix = null;
+      try{
+        fix = await chamarGemini(sistemaRevisor(gk),
+          `RITMO: ${GENRES[gk].nome}\n` + (inspAtual ? `REFERÊNCIA DE INSPIRAÇÃO: ${inspAtual}. Se algum verso, gancho ou título estiver igual ou muito parecido com essa música, reescreva com palavras e cena totalmente novas.\n` : "") + `HISTÓRIA ORIGINAL: ${base ? (base.tema || "") : $("tema").value.trim()}\n\nLETRA PARA REVISAR:\n${letra}\n\n` +
+          (listaSemRima ? `VERSOS QUE ESTÃO SEM RIMA (corrija todos):\n${listaSemRima}\n\n` : "") +
+          (c.achadas.length ? `PALAVRAS COM CARA DE IA PARA TROCAR: ${c.achadas.join(", ")}\n\n` : "") +
+          `Devolva a letra completa revisada.`);
+      }catch(e){
+        // a letra já composta não se perde se a revisão falhar (ex.: limite grátis acabou no meio)
+        semRevisao = e.message || String(e);
+        break;
+      }
+      if(fix && typeof fix.letra === "string" && fix.letra.trim().length >= 40){
+        letra = limparLetra(fix.letra);
+        if(fix.titulo && (ajuste || !$("titulo").value.trim())) obj.titulo = fix.titulo;
+        if(fix.notas) obj.notas = fix.notas;
+        revisada = true;
+      }
+    }
+    fase(3); await sleep(350);
+    const res = {
+      revisada,
+      genero: gk,
+      bpm: ajuste && ultimo ? (ultimo.bpm || GENRES[gk].bpm) : bpmAtual(),
+      titulo: (obj.titulo || "Sem título").replace(/[“”"]/g, "").trim(),
+      letra,
+      estilo: ajuste && ultimo ? ultimo.estilo : montarEstilo(gk),
+      notas: obj.notas || "",
+      tema: base ? (base.tema || "") : $("tema").value.trim(),
+      detalhes: base ? (base.detalhes || "") : "",
+      inspirado: inspAtual,
+      clima: base ? (base.clima || "auto") : (radio("clima") || "auto"),
+      voz: base ? (base.voz || "masculino") : (radio("voz") || "masculino"),
+      quando: Date.now()
+    };
+    fase(4);
+    mostrar(res, true);
+    salvarHistorico(res);
+    setStatus($("composeStatus"), ""); setStatus($("resStatus"), "");
+    if(ajuste) $("ajuste").value = "";
+    if(semRevisao){
+      $("qWarn").textContent = "⚠ Saiu sem a revisão do produtor: " + semRevisao + ($("qWarn").textContent ? " · " + $("qWarn").textContent.replace(/^⚠\s*/, "") : "");
+      toast("Letra pronta, mas sem a revisão do produtor.", "err");
+    }else toast(ajuste ? "Letra ajustada!" : "Letra pronta!");
+  }catch(e){
+    const msg = e.message || String(e);
+    setStatus(st, "✗ " + msg, "err");
+    toast(msg, "err");
+  }finally{
+    carregando(false);
+    btns.forEach(b => b.disabled = false);
+  }
+}
+const letraAtual = () => $("outLetra").innerText.trim();
+
+$("btnGerar").onclick = () => gerar();
+$("btnAjustar").onclick = () => {
+  const a = $("ajuste").value.trim();
+  if(!a){ toast("Escreva o que quer mudar.", "err"); $("ajuste").focus(); return; }
+  gerar(a, letraAtual());
+};
+$("btnHumano").onclick = () => gerar("deixe a letra mais humana e popular: troque qualquer frase que pareça poema ou texto de máquina por frases que um compositor de bar falaria, mais concretas e com mais detalhes do dia a dia, mantendo todas as rimas", letraAtual());
+$("btnRefrao").onclick = () => gerar("crie um refrão totalmente novo, com um gancho mais forte, rimado e mais fácil de cantar junto; atualize o refrão final igual; pode mudar o título para combinar com o novo gancho", letraAtual());
+/* =========================================================
+   HISTÓRICO
+   ========================================================= */
+function salvarHistorico(res){
+  const h = store.get("lg_hist", []);
+  h.unshift(res); store.set("lg_hist", h.slice(0, 30)); renderHist();
+}
+function renderHist(){
+  const h = store.get("lg_hist", []); const box = $("hist"); box.innerHTML = "";
+  $("histCount").textContent = h.length ? `${h.length} letra${h.length > 1 ? "s" : ""} desde que você abriu o app. Ao fechar, a lista é apagada.` : "As letras que você fizer agora aparecem aqui. Ao fechar o app, a lista é apagada.";
+  if(!h.length){ box.innerHTML = `<div class="empty"><p>Nenhuma letra ainda.</p></div>`; return; }
+  h.forEach((r, i) => {
+    const g = GENRES[r.genero] || GENRES.forro; const dt = new Date(r.quando);
+    const d = document.createElement("div"); d.className = "hist-item"; d.setAttribute("role", "button"); d.tabIndex = 0;
+    const inicial = esc(((r.titulo || "?").trim().charAt(0) || "?").toUpperCase());
+    d.innerHTML = `<div class="hcover" aria-hidden="true" style="--c0:${g.cores[0]};--c1:${g.cores[1]};--c2:${g.cores[2]}">${inicial}</div>
+      <div class="hinfo"><b>${esc(r.titulo)}</b><small>${esc(g.curto || g.nome)}, ${dt.toLocaleDateString("pt-BR", { day: "numeric", month: "short" })} às ${dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</small></div>`;
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "btn btn-sec btn-sq"; del.setAttribute("aria-label", "Apagar " + (r.titulo || "letra"));
+    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+    del.onclick = ev => { ev.stopPropagation(); const hh = store.get("lg_hist", []); hh.splice(i, 1); store.set("lg_hist", hh); renderHist(); };
+    d.onclick = () => mostrar(r, true);
+    d.onkeydown = ev => { if(ev.key === "Enter") mostrar(r, true); };
+    d.appendChild(del); box.appendChild(d);
+  });
+}
+
+/* =========================================================
+   INÍCIO
+   ========================================================= */
+renderGenres();
+renderRadios("climaChips", "clima", CLIMAS, null);
+renderRadios("vozSeg", "voz", VOZES, null);
+renderRadios("tamSeg", "tamanho", TAMANHOS, null);
+atualizarBpm();
+contarTema();
+atualizarConexao();
+renderHist();
+{ const ultima = store.get("lg_hist", [])[0]; if(ultima && ultima.letra) mostrar(ultima, false); }
+irPara("compor");
+
+})();
+</script>
+</body>
+</html>

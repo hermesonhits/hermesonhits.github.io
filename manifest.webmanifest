@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "Hermeson hits Studio",
+  "short_name": "Hermeson hits",
+  "description": "Componha letras de música com IA e cole direto no Suno: forró, sertanejo, arrocha, gospel e mais.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#130F18",
+  "theme_color": "#130F18",
+  "categories": ["music", "entertainment", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshot-1.webp", "sizes": "1080x1920", "type": "image/webp", "form_factor": "narrow", "label": "Escolha o ritmo da música" },
+    { "src": "screenshot-2.webp", "sizes": "1080x1920", "type": "image/webp", "form_factor": "narrow", "label": "Letra pronta com capa para o Instagram" },
+    { "src": "screenshot-3.webp", "sizes": "1080x1920", "type": "image/webp", "form_factor": "narrow", "label": "Copie a letra e o estilo para o Suno" }
+  ]
+}
