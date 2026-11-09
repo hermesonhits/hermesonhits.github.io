@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.hermesonhits.studio",
+    "sha256_cert_fingerprints": ["75:75:10:99:48:90:9A:E1:D5:56:71:F4:32:A6:3B:6C:E6:43:74:FB:DD:D7:00:D4:7A:AA:86:41:2A:DF:1C:3C"]
+  }
+}]
